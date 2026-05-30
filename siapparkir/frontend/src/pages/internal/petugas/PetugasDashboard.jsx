@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  LayoutDashboard, ClipboardList, Users, LogOut, User, MapPin, Map, ClipboardCheck 
+  LayoutDashboard, 
+  ClipboardList, 
+  Users, 
+  LogOut, 
+  User, 
+  MapPin, 
+  Map, 
+  ClipboardCheck 
 } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
 
@@ -20,15 +27,16 @@ export default function PetugasDashboard() {
   const fetchLaporan = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:3000/api/petugas/tugas', {
+      // GANTI URL INI sesuai dengan rute backend yang mengarah ke getDashboard
+      const res = await axios.get('http://localhost:3000/api/petugas/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // TAMBAHKAN LOG INI
-      console.log("ISI RESPONS DARI BACKEND:", res.data); 
+      console.log("ISI RESPONS DASHBOARD:", res.data); 
       
-      // Kemungkinan struktur data adalah res.data.data
-      setLaporan(Array.isArray(res.data.data) ? res.data.data : []);
+      // Karena backend getDashboard mengirim { tugas_aktif: [...] }
+      setLaporan(Array.isArray(res.data.data.tugas_aktif) ? res.data.data.tugas_aktif : []);
+      
     } catch (err) {
       console.error("Error detail:", err.response ? err.response.data : err.message);
     } finally {
@@ -125,9 +133,26 @@ export default function PetugasDashboard() {
                       </div>
                     </div>
                     
-                    <button className="flex-1 bg-[#001A57] hover:bg-[#00133f] text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm">
-                      <ClipboardCheck size={16} /> Buka Tugas
-                    </button>
+                    <div className="flex gap-2">
+                      {/* Tombol Buka Tugas */}
+                      <button 
+                        onClick={() => navigate(`/internal/petugas/detail-penindakan/:id}`)}
+                        className="flex-1 bg-[#001A57] hover:bg-[#00133f] text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
+                      >
+                        <ClipboardCheck size={16} /> Buka Tugas
+                      </button>
+
+                      {/* Tombol Akses Map */}
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${item.Laporan.latitude},${item.Laporan.longitude}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="bg-white border border-gray-200 hover:bg-gray-50 text-[#001A57] px-4 rounded-xl flex items-center justify-center transition-all shadow-sm"
+                        title="Lihat di Maps"
+                      >
+                        <Map size={20} />
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}

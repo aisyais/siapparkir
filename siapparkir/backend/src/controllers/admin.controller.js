@@ -156,31 +156,34 @@ exports.getLaporanList = async (req, res) => {
 
 exports.getLaporanDetail = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
-    const laporan = await Laporan.findByPk(id, {
+    // Ganti findByPk dengan findOne untuk menentukan kolom PK secara spesifik
+    const laporan = await Laporan.findOne({
+      where: { id_laporan: id }, // <--- GANTI 'id_laporan' dengan nama kolom PK Anda yang sebenarnya
       include: [
         { model: KategoriPelanggaran, as: 'kategori' },
-        { model: User, as: 'pelapor',  attributes: ['nama','email','no_hp'], required: false },
-        { model: User, as: 'petugas',  attributes: ['id_user','nama','kode_user','no_hp'], required: false },
-        { model: Tindakan,  as: 'tindakan',  required: false },
+        { model: User, as: 'pelapor', attributes: ['nama', 'email', 'no_hp'], required: false },
+        { model: User, as: 'petugas', attributes: ['id_user', 'nama', 'kode_user', 'no_hp'], required: false },
+        { model: Tindakan, as: 'tindakan', required: false },
         { model: Penugasan, as: 'penugasan', required: false,
-          include: [{ model: User, as: 'petugas', attributes: ['id_user','nama','kode_user'] }]
+          include: [{ model: User, as: 'petugas', attributes: ['id_user', 'nama', 'kode_user'] }]
         },
         { model: LogStatus, as: 'log', required: false,
-          include: [{ model: User, as: 'pengubah', attributes: ['nama','role'] }],
-          order: [['created_at','DESC']],
+          include: [{ model: User, as: 'pengubah', attributes: ['nama', 'role'] }]
         },
       ],
-    })
+      // order dipindahkan ke luar agar tidak error
+      order: [[{ model: LogStatus, as: 'log' }, 'created_at', 'DESC']]
+    });
 
-    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404)
-    return ok(res, laporan)
+    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404);
+    return ok(res, laporan);
   } catch (err) {
-    console.error(err)
-    return fail(res, 'Server error', 500)
+    console.error(err);
+    return fail(res, 'Server error', 500);
   }
-}
+};
 
 // ============================================================
 // LAPORAN — VERIFIKASI & TUGASKAN
@@ -193,15 +196,15 @@ exports.verifikasiDanTugaskan = async (req, res) => {
 
     if (!id_petugas) return fail(res, 'Petugas wajib dipilih')
 
-    const laporan = await Laporan.findByPk(id)
-    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404)
+    const laporan = await Laporan.findOne({ where: { id_laporan: id } });
+    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404);
     if (!['menunggu_verifikasi','diverifikasi'].includes(laporan.status_laporan))
-      return fail(res, 'Laporan tidak dapat diverifikasi pada status ini')
+      return fail(res, 'Laporan tidak dapat diverifikasi pada status ini');
 
     const petugas = await User.findOne({
       where: { id_user: id_petugas, role: 'petugas', status_akun: 'aktif' }
-    })
-    if (!petugas) return fail(res, 'Petugas tidak ditemukan')
+    });
+    if (!petugas) return fail(res, 'Petugas tidak ditemukan');
 
     // Update laporan
     await laporan.update({

@@ -157,3 +157,60 @@ exports.kirimPenilaian = async (req, res) => {
     return res.status(500).json({ message: 'Terjadi kesalahan pada server' });
   }
 };
+
+exports.getAllLaporan = async (req, res) => {
+  try {
+    const data = await Laporan.findAll({
+      order: [['waktu_laporan', 'DESC']]
+    });
+    return ok(res, data); // Pastikan ini mengirim array
+  } catch (err) {
+    return fail(res, 'Gagal mengambil data');
+  }
+};
+
+// ============================================================
+// ADMIN: Verifikasi Laporan (Setujui)
+// ============================================================
+exports.verifikasiLaporan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { petugas_id } = req.body;
+
+    const laporan = await Laporan.findByPk(id);
+    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404);
+
+    await laporan.update({
+      status_laporan: 'diproses',
+      petugas_id: petugas_id // Pastikan kolom ini ada di model Laporan
+    });
+
+    return ok(res, null, 'Laporan berhasil disetujui');
+  } catch (err) {
+    console.error(err);
+    return fail(res, 'Gagal verifikasi laporan', 500);
+  }
+};
+
+// ============================================================
+// ADMIN: Tolak Laporan
+// ============================================================
+exports.tolakLaporan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { alasan_penolakan } = req.body;
+
+    const laporan = await Laporan.findByPk(id);
+    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404);
+
+    await laporan.update({
+      status_laporan: 'ditolak',
+      catatan_admin: alasan_penolakan // Pastikan kolom ini ada di model Laporan
+    });
+
+    return ok(res, null, 'Laporan berhasil ditolak');
+  } catch (err) {
+    console.error(err);
+    return fail(res, 'Gagal menolak laporan', 500);
+  }
+};

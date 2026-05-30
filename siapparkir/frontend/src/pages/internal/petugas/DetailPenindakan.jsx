@@ -49,15 +49,31 @@ export default function DetailPenindakan() {
       <div className="flex flex-1">
         {/* SIDEBAR */}
         <aside className="hidden md:flex w-64 bg-[#001A57] text-white flex-col justify-between p-6 shadow-xl">
-          <nav className="space-y-1.5">
-            <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" onClick={() => navigate('/internal/petugas/dashboard')} />
-            <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" active />
-            <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
-          </nav>
-          <button onClick={() => navigate('/login')} className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-red-300 hover:bg-red-500/10 rounded-xl">
-            <LogOut size={16} /> Keluar
-          </button>
-        </aside>
+                  <div className="space-y-8">
+                    <button 
+                      onClick={() => navigate('/internal/petugas/profil')}
+                      className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-all text-left"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 font-medium">Masuk sebagai</div>
+                        <div className="text-sm font-bold tracking-wide">Petugas</div>
+                      </div>
+                    </button>
+                    <nav className="space-y-1.5">
+                      <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" />
+                      <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />
+                      <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
+                    </nav>
+                  </div>
+                  <div className="pt-6 border-t border-white/10">
+                    <button onClick={() => navigate('/login')} className="flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl text-red-300 hover:bg-red-500/10 transition-all">
+                      <LogOut size={16} /> Keluar
+                    </button>
+                  </div>
+                </aside>
 
         {/* MAIN CONTENT */}
         <main className="flex-1 p-8 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">

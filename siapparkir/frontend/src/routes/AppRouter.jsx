@@ -18,6 +18,7 @@ import PetugasDashboard  from '../pages/internal/petugas/PetugasDashboard'
 import PetugasTugas      from '../pages/internal/petugas/PetugasTugas'
 import LaporanMasuk      from '../pages/internal/petugas/LaporanMasuk'
 import ProfilPetugas     from '../pages/internal/petugas/ProfilPetugas'
+import DetailPenindakan   from '../pages/internal/petugas/DetailPenindakan'
 import PrivateRoute      from './PrivateRoute'
 import SuksesPage        from '../pages/public/SuksesPage'
 import DetailLaporanPage from '../pages/public/DetailLaporanPage'
@@ -60,6 +61,7 @@ export default function AppRouter() {
           <Route path="/internal/petugas/tugas" element={<PetugasTugas />} />
           <Route path="/internal/petugas/profil" element={<ProfilPetugas />} />
           <Route path="/internal/petugas/laporan" element={<LaporanMasuk/>} />
+          <Route path="/internal/petugas/detail-penindakan/:id" element={<DetailPenindakan />} />
         </Route>
 
         {/* Jika mengetik rute asal, kembalikan ke Landing Page awal */}
