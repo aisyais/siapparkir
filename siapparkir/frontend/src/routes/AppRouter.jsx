@@ -1,0 +1,70 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+
+import LandingPage       from '../pages/public/LandingPage'
+import LaporPage         from '../pages/public/LaporPage'
+import CekStatusPage     from '../pages/public/CekStatusPage'
+import RiwayatPage       from '../pages/public/RiwayatPage'
+import DashboardPage     from '../pages/public/Dashboard'
+import LoginPage         from '../pages/internal/LoginPage'
+import AdminDashboard    from '../pages/internal/admin/AdminDashboard'
+import AdminLaporan      from '../pages/internal/admin/AdminLaporan'
+import AdminPetugas      from '../pages/internal/admin/AdminPetugas'
+import AdminLaporanPenindakan from '../pages/internal/admin/AdminLaporanPenindakan';
+import TambahPetugas     from '../pages/internal/admin/TambahPetugas'
+import PenilaianMasyarakat from '../pages/internal/admin/PenilaianMasyarakat'
+import PreviewPDF        from '../pages/internal/admin/PreviewPDF';
+import ProfilAdmin       from '../pages/internal/admin/ProfilAdmin'
+import PetugasDashboard  from '../pages/internal/petugas/PetugasDashboard'
+import PetugasTugas      from '../pages/internal/petugas/PetugasTugas'
+import LaporanMasuk      from '../pages/internal/petugas/LaporanMasuk'
+import ProfilPetugas     from '../pages/internal/petugas/ProfilPetugas'
+import PrivateRoute      from './PrivateRoute'
+import SuksesPage        from '../pages/public/SuksesPage'
+import DetailLaporanPage from '../pages/public/DetailLaporanPage'
+
+export default function AppRouter() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* ==================================================================== */}
+        {/* UTAMA: Halaman paling awal saat diakses (/) adalah Landing Page Public */}
+        {/* ==================================================================== */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Rute Publik Lainnya */}
+        <Route path="/dashboard"  element={<DashboardPage />} />
+        <Route path="/lapor"      element={<LaporPage />} />
+        <Route path="/cek-status" element={<CekStatusPage />} />
+        <Route path="/riwayat"    element={<RiwayatPage />} />
+        <Route path="/sukses"       element={<SuksesPage />} />
+        <Route path="/detail/:kode" element={<DetailLaporanPage />} />
+
+        {/* Internal / Login Area */}
+        <Route path="/internal/login" element={<LoginPage />} />
+
+        {/* Hak Akses: Admin */}
+        <Route element={<PrivateRoute role="admin" />}>
+          <Route path="/internal/admin"         element={<AdminDashboard />} />
+          <Route path="/internal/admin/laporan" element={<AdminLaporan />} />
+          <Route path="/internal/admin/petugas" element={<AdminPetugas />} />
+          <Route path="/internal/admin/laporan_penindakan" element={<AdminLaporanPenindakan />} />
+          <Route path="/internal/admin/tambah_petugas" element={<TambahPetugas />} />
+          <Route path="/internal/admin/penilaian" element={<PenilaianMasyarakat />} />
+          <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
+          <Route path="/internal/admin/profil" element={<ProfilAdmin />} />
+        </Route>
+
+        {/* Hak Akses: Petugas */}
+        <Route element={<PrivateRoute role="petugas" />}>
+          <Route path="/internal/petugas"       element={<PetugasDashboard />} />
+          <Route path="/internal/petugas/tugas" element={<PetugasTugas />} />
+          <Route path="/internal/petugas/profil" element={<ProfilPetugas />} />
+          <Route path="/internal/petugas/laporan" element={<LaporanMasuk/>} />
+        </Route>
+
+        {/* Jika mengetik rute asal, kembalikan ke Landing Page awal */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
