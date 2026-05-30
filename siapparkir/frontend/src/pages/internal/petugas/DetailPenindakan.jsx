@@ -17,11 +17,42 @@ export default function DetailPenindakan() {
   const [catatan, setCatatan] = useState('');
   const [fotoBukti, setFotoBukti] = useState(null);
 
+  const [dataTugas, setDataTugas] = useState(null); // Data penugasan + laporan
+  const [loading, setLoading] = useState(true);
+
+  // DI DALAM DetailPenindakan.jsx
   useEffect(() => {
-    // Simulasi pengambilan data berdasarkan ID
-    // Anda bisa menggantinya dengan call API: axios.get(`/api/laporan/${id}`)
-    console.log("Memuat detail untuk ID:", id);
-  }, [id]);
+    const fetchDetail = async () => {
+      // 1. Bersihkan ID jika ternyata berisi karakter sampah ":id}"
+      let cleanId = id;
+      if (cleanId && cleanId.includes(':')) {
+        cleanId = cleanId.replace(/[:}]/g, ''); 
+      }
+
+      // 2. Jika setelah dibersihkan hasilnya kosong atau tetap "id", jangan lanjut
+      if (!cleanId || cleanId === 'id') {
+        console.warn("ID tidak valid, tidak bisa fetch data.");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Panggil API dengan ID yang sudah pasti bersih
+        const res = await axios.get(`http://localhost:3000/api/petugas/tugas/${cleanId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log("Data Detail Tugas:", res.data.data);
+        setDataTugas(res.data.data);
+      } catch (err) {
+        console.error("Gagal memuat detail:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [id, token]);
 
   const handleSelesaikan = async () => {
     if (!fotoBukti) return alert("Harap unggah foto bukti penindakan!");
@@ -63,7 +94,7 @@ export default function DetailPenindakan() {
                       </div>
                     </button>
                     <nav className="space-y-1.5">
-                      <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" />
+                      <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" onClick={() => navigate('/internal/petugas')} />
                       <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />
                       <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
                     </nav>
@@ -78,21 +109,33 @@ export default function DetailPenindakan() {
         {/* MAIN CONTENT */}
         <main className="flex-1 p-8 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            {/* TARUH FOTO BUKTI DI SINI */}
+            {dataTugas?.Laporan?.foto_bukti && (
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h2 className="text-xs font-bold text-gray-400 uppercase mb-4">Bukti Laporan Warga</h2>
+                <img 
+                  src={`http://localhost:3000/storage/${dataTugas.Laporan.foto_bukti}`} 
+                  alt="Bukti Laporan" 
+                  className="w-full h-64 object-cover rounded-xl shadow-sm"
+                />
+              </div>
+            )}
+            
             {/* Info Pelanggaran */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
               <h2 className="text-xs font-bold text-gray-400 uppercase mb-4">Informasi Pelanggaran</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase">Nomor Kendaraan</p>
-                  <p className="text-2xl font-black font-mono">B 0000 XXX</p>
+                  <p className="text-2xl font-black font-mono">{dataTugas?.Laporan?.nomor_plat || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase">Jenis</p>
-                  <p className="text-sm font-bold text-gray-700">Parkir Liar</p>
+                  <p className="text-sm font-bold text-gray-700">{dataTugas?.Laporan?.jenis_pelanggaran || 'Parkir Liar'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-4 text-sm text-gray-600">
-                <MapPin size={16} /> Jl. Emy Saelan, Palu
+                <MapPin size={16} /> {dataTugas?.Laporan?.alamat || 'Alamat tidak tersedia'}
               </div>
             </div>
           </div>

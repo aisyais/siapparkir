@@ -136,7 +136,7 @@ export default function PetugasDashboard() {
                     <div className="flex gap-2">
                       {/* Tombol Buka Tugas */}
                       <button 
-                        onClick={() => navigate(`/internal/petugas/detail-penindakan/:id}`)}
+                        onClick={() => navigate(`/internal/petugas/detail-penindakan/${item.id_penugasan}`)}
                         className="flex-1 bg-[#001A57] hover:bg-[#00133f] text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
                       >
                         <ClipboardCheck size={16} /> Buka Tugas
