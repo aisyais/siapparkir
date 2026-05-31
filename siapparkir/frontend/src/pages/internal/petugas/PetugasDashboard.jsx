@@ -116,7 +116,15 @@ export default function PetugasDashboard() {
                 <div key={item.id_penugasan} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
                   <div className="relative h-48 sm:h-52 w-full bg-gray-100">
                     {/* Menggunakan item.Laporan.foto_bukti */}
-                    <img src={`http://localhost:3000/storage/${item.Laporan.foto_bukti}`} alt="Bukti" className="w-full h-full object-cover" />
+                    <img
+                      src={`http://localhost:3000/uploads/${item.Laporan?.foto_bukti}`}
+                      alt="Bukti"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log("Gagal load gambar:", e.target.src);
+                        e.target.src = "/no-image.png"; // opsional
+                      }}
+                    />
                     
                     <span className={`absolute top-4 left-4 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-md flex items-center gap-1 shadow-sm ${item.Laporan.prioritas === 'tinggi' ? 'bg-[#C21A1A] text-white' : 'bg-[#BCE3FF] text-[#001A57]'}`}>
                       {item.Laporan.prioritas === 'tinggi' ? '🚨 Prioritas Tinggi' : '⏳ Menunggu Penindakan'}

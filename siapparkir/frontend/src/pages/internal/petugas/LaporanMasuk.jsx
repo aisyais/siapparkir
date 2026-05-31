@@ -1,126 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import {
-  LayoutDashboard,
-  ClipboardList,
-  Users,
-  LogOut,
-  User,
-  Search,
-  Filter
-} from 'lucide-react';
-
-import useAuthStore from '../../../store/authStore';
+  LayoutDashboard, ClipboardList, Users,
+  LogOut, User, Search, Filter
+} from 'lucide-react'
+import useAuthStore from '../../../store/authStore'
 
 export default function LaporanMasuk() {
-  const navigate = useNavigate();
-  const token = useAuthStore((s) => s.token);
+  const navigate = useNavigate()
+  const token    = useAuthStore((s) => s.token)
 
-  const [laporan, setLaporan] = useState([]);
-  const [filteredLaporan, setFilteredLaporan] = useState([]);
-  const [search, setSearch] = useState('');
-
-  const [stats, setStats] = useState({
-    total: 0,
-    belum: 0,
-    duplikat: 0
-  });
-
-  const [loading, setLoading] = useState(true);
+  const [laporan, setLaporan]               = useState([])
+  const [filteredLaporan, setFilteredLaporan] = useState([])
+  const [search, setSearch]                 = useState('')
+  const [loading, setLoading]               = useState(true)
+  const [stats, setStats]                   = useState({
+    total_antrian:    0,
+    belum_verifikasi: 0,
+    indikasi_duplikat: 0,
+  })
 
   useEffect(() => {
-    fetchData();
-  }, [token]);
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(
+          'http://localhost:3000/api/petugas/laporan-masuk',
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
 
-  useEffect(() => {
-    handleSearch();
-  }, [search, laporan]);
+        const payload   = res.data?.data || {}
+        const dataArray = Array.isArray(payload.data) ? payload.data : []
 
-  const fetchData = async () => {
-    if (!token) return;
-
-    try {
-      setLoading(true);
-
-      const res = await axios.get(
-        'http://localhost:3000/api/petugas/laporan-masuk',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      console.log(res.data);
-
-      const data = Array.isArray(res.data.data)
-        ? res.data.data
-        : [];
-
-      setLaporan(data);
-      setFilteredLaporan(data);
-
-      setStats({
-        total: data.length,
-        belum: data.filter(
-          (item) =>
-            item.status === 'Pending' ||
-            item.status === 'Belum Diverifikasi'
-        ).length,
-        duplikat: data.filter(
-          (item) => item.status === 'Duplikat'
-        ).length
-      });
-    } catch (err) {
-      console.error('Gagal mengambil data:', err);
-    } finally {
-      setLoading(false);
+        setLaporan(dataArray)
+        setFilteredLaporan(dataArray)
+        setStats({
+          total_antrian:     payload.statistik?.total_antrian     || 0,
+          belum_verifikasi:  payload.statistik?.belum_verifikasi  || 0,
+          indikasi_duplikat: payload.statistik?.indikasi_duplikat || 0,
+        })
+      } catch (err) {
+        console.error('Gagal mengambil data:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  };
 
-  const handleSearch = () => {
-    const keyword = search.toLowerCase();
+    fetchData()
+  }, [token])
 
-    const filtered = laporan.filter((item) => {
-      const id = String(item.id_laporan || '').toLowerCase();
-      const lokasi = String(item.lokasi || '').toLowerCase();
+  // Filter search — jalankan saat search atau laporan berubah
+  useEffect(() => {
+    if (!search.trim()) {
+      setFilteredLaporan(laporan)
+      return
+    }
+    const keyword = search.toLowerCase()
+    setFilteredLaporan(
+      laporan.filter((item) =>
+        item.kode_laporan?.toLowerCase().includes(keyword) ||
+        item.nomor_plat?.toLowerCase().includes(keyword)  ||
+        item.alamat?.toLowerCase().includes(keyword)
+      )
+    )
+  }, [search, laporan])
 
-      return (
-        id.includes(keyword) ||
-        lokasi.includes(keyword)
-      );
-    });
+  const formatWaktu = (dateStr) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleString('id-ID', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+  }
 
-    setFilteredLaporan(filtered);
-  };
+  const STATUS_STYLE = {
+    menunggu_verifikasi: 'bg-yellow-50 text-yellow-600',
+    diverifikasi:        'bg-blue-50 text-blue-600',
+    ditolak:             'bg-red-50 text-red-600',
+  }
+
+  const STATUS_LABEL = {
+    menunggu_verifikasi: 'Pending',
+    diverifikasi:        'Verifikasi',
+    ditolak:             'Ditolak',
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
 
       {/* HEADER */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-
         <div className="flex items-center gap-3">
-
           <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">
-              P
-            </span>
+            <span className="text-white font-black text-sm">P</span>
           </div>
-
           <div>
-            <h1 className="font-bold text-gray-800 leading-none">
-              SiapParkir
-            </h1>
-
-            <p className="text-xs text-gray-400 mt-0.5">
-              Laporan Masuk Petugas Lapangan
-            </p>
+            <h1 className="font-bold text-gray-800 leading-none">SiapParkir</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Laporan Masuk Petugas Lapangan</p>
           </div>
-
         </div>
-
         <button onClick={() => navigate('/internal/petugas/profil')}>
           <img
             src="/avatar-petugas.jpg"
@@ -128,238 +107,210 @@ export default function LaporanMasuk() {
             className="w-10 h-10 rounded-full border border-gray-200 object-cover"
           />
         </button>
-
       </header>
 
       <div className="flex flex-1">
 
         {/* SIDEBAR */}
         <aside className="hidden md:flex w-64 bg-[#001A57] text-white flex-col justify-between p-6 shadow-xl">
-
           <div className="space-y-8">
-
-            <button 
-                onClick={() => navigate('/internal/petugas/profil')}
-                className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-all text-left"
-                >
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                    <User className="w-5 h-5" />
-                </div>
-                <div>
-                    <div className="text-xs text-gray-400 font-medium">Masuk sebagai</div>
-                    <div className="text-sm font-bold tracking-wide">Petugas</div>
-                </div>
-                </button>
-
+            <button
+              onClick={() => navigate('/internal/petugas/profil')}
+              className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-all text-left"
+            >
+              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs text-gray-400 font-medium">Masuk sebagai</div>
+                <div className="text-sm font-bold tracking-wide">Petugas</div>
+              </div>
+            </button>
             <nav className="space-y-1.5">
-
               <SidebarItem
-                icon={<LayoutDashboard size={16} />}
-                label="Daftar Tugas"
+                icon={<LayoutDashboard size={16}/>}
+                label="Dashboard"
                 onClick={() => navigate('/internal/petugas')}
               />
-
               <SidebarItem
-                icon={<ClipboardList size={16} />}
+                icon={<ClipboardList size={16}/>}
                 label="Laporan Masuk"
                 active
               />
-
+              <SidebarItem
+                icon={<Users size={16}/>}
+                label="Petugas Lapangan"
+                onClick={() => navigate('/internal/petugas/tugas')}
+              />
             </nav>
-
           </div>
-
           <div className="pt-6 border-t border-white/10">
-
             <button
               onClick={() => navigate('/internal/login')}
               className="flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl text-red-300 hover:bg-red-500/10 transition-all"
             >
-              <LogOut size={16} />
-              Keluar
+              <LogOut size={16} /> Keluar
             </button>
-
           </div>
-
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 p-6 sm:p-10 transition-all overflow-y-auto">
+        <main className="flex-1 p-6 sm:p-10 overflow-y-auto">
 
           {/* TITLE */}
           <div className="mb-8">
-
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight font-serif mb-2">
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
               Antrian Laporan Masuk
             </h1>
-
             <p className="text-gray-500 text-sm">
-              Verifikasi dan tugaskan petugas untuk laporan terbaru.
+              Verifikasi dan tugaskan petugas untuk laporan pelanggaran terbaru.
             </p>
-
           </div>
 
-          {/* SEARCH */}
-          <div className="flex gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-200 items-center">
+          {/* STAT CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <StatCard
+              label="TOTAL ANTRIAN"
+              value={stats.total_antrian}
+              icon="📋"
+            />
+            <StatCard
+              label="BELUM DIVERIFIKASI"
+              value={stats.belum_verifikasi}
+              icon="🔴"
+              valueColor="text-red-600"
+            />
+            <StatCard
+              label="INDIKASI DUPLIKAT"
+              value={stats.indikasi_duplikat}
+              icon="📄"
+            />
+          </div>
 
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-
-              <Search className="text-gray-400" size={18} />
-
+          {/* SEARCH & FILTER */}
+          <div className="flex gap-3 mb-5">
+            <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <Search className="text-gray-400 flex-shrink-0" size={16} />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari ID Laporan atau Lokasi..."
+                placeholder="Cari ID Laporan, Nopol, atau Lokasi..."
                 className="bg-transparent outline-none text-sm w-full"
               />
-
             </div>
-
-            <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 bg-white rounded-xl hover:bg-gray-50 shadow-sm transition">
               <Filter size={16} />
               Filter
             </button>
-
-          </div>
-
-          {/* STAT */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-            <StatCard
-              label="TOTAL ANTRIAN"
-              value={stats.total}
-            />
-
-            <StatCard
-              label="BELUM DIVERIFIKASI"
-              value={stats.belum}
-            />
-
-            <StatCard
-              label="INDIKASI DUPLIKAT"
-              value={stats.duplikat}
-            />
-
           </div>
 
           {/* TABLE */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-
             <table className="w-full text-left text-sm">
-
-              <thead className="bg-gray-50 text-gray-400 uppercase font-bold text-[10px] tracking-wider">
-
+              <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-
-                  <th className="px-6 py-4">
-                    ID LAPORAN
-                  </th>
-
-                  <th className="px-6 py-4">
-                    FOTO BUKTI
-                  </th>
-
-                  <th className="px-6 py-4">
-                    WAKTU LAPORAN
-                  </th>
-
-                  <th className="px-6 py-4">
-                    LOKASI
-                  </th>
-
-                  <th className="px-6 py-4">
-                    STATUS
-                  </th>
-
+                  <th className="px-6 py-4">ID Laporan</th>
+                  <th className="px-6 py-4">Foto Bukti</th>
+                  <th className="px-6 py-4">Waktu Laporan</th>
+                  <th className="px-6 py-4">Lokasi</th>
+                  <th className="px-6 py-4">Status</th>
                 </tr>
-
               </thead>
-
               <tbody className="divide-y divide-gray-100">
-
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="text-center py-10"
-                    >
-                      Memuat data dari database...
+                    <td colSpan="5" className="text-center py-16 text-gray-400">
+                      ⏳ Memuat data laporan...
                     </td>
                   </tr>
-                ) : filteredLaporan.length > 0 ? (
-                    filteredLaporan.map((item) => (
-                        <tr
-                        key={item.id_laporan}
-                        onClick={() => navigate(`/internal/petugas/detail-penindakan/${item.id_laporan}`)}
-                        className="cursor-pointer hover:bg-gray-50 transition-colors"
-                        >
-                        <td className="px-6 py-4 font-bold text-[#001A57]">
-                            {item.id_laporan}
-                        </td>
-                        <td className="px-6 py-4">
-                            <img
-                            src={`http://localhost:3000/uploads/${item.foto}`}
-                            alt="Bukti"
-                            className="w-16 h-10 object-cover rounded-md"
-                            />
-                        </td>
-                        <td className="px-6 py-4">
-                            {item.waktu
-                            ? new Date(item.waktu).toLocaleDateString('id-ID')
-                            : '-'}
-                        </td>
-                        <td className="px-6 py-4 font-medium">
-                            {item.lokasi}
-                        </td>
-                        <td className="px-6 py-4">
-                            <span
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold ${
-                                item.status === 'Pending'
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'bg-green-50 text-green-600'
-                            }`}
-                            >
-                            ● {item.status}
-                            </span>
-                        </td>
-                        </tr>
-                    ))
-                    ) : (
+                ) : filteredLaporan.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="text-center py-10"
-                    >
-                      Tidak ada laporan masuk.
+                    <td colSpan="5" className="text-center py-16 text-gray-400">
+                      <div className="text-4xl mb-3">📭</div>
+                      <p className="font-medium text-gray-500">Tidak ada laporan masuk</p>
                     </td>
                   </tr>
+                ) : (
+                  filteredLaporan.map((item) => (
+                    <tr
+                      key={item.id_laporan}
+                      onClick={() => navigate(`/internal/petugas/tugas/${item.id_laporan}`)}
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      {/* ID Laporan */}
+                      <td className="px-6 py-4">
+                        <span className="font-bold text-[#001A57] text-sm">
+                          #{item.kode_laporan}
+                        </span>
+                        {item.is_duplikat ? (
+                          <span className="ml-2 text-[10px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded font-bold">
+                            DUPLIKAT
+                          </span>
+                        ) : null}
+                      </td>
+
+                      {/* Foto */}
+                      <td className="px-6 py-4">
+                        {item.foto_bukti ? (
+                          <img
+                            src={`http://localhost:3000/uploads/${item.foto_bukti}`}
+                            alt="Bukti"
+                            className="w-16 h-10 object-cover rounded-lg border border-gray-100"
+                          />
+                        ) : (
+                          <div className="w-16 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-300 text-xs">
+                            N/A
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Waktu */}
+                      <td className="px-6 py-4 text-gray-600 text-xs">
+                        {formatWaktu(item.waktu_laporan)}
+                      </td>
+
+                      {/* Lokasi */}
+                      <td className="px-6 py-4 max-w-xs">
+                        <p className="font-medium text-gray-700 text-sm truncate">
+                          {item.alamat || '-'}
+                        </p>
+                        {item.kategori?.nama_kategori && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {item.kategori.nama_kategori}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                          STATUS_STYLE[item.status_laporan] || 'bg-gray-50 text-gray-500'
+                        }`}>
+                          ● {STATUS_LABEL[item.status_laporan] || item.status_laporan}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
                 )}
-
               </tbody>
-
             </table>
 
+            {/* FOOTER TABLE */}
+            {!loading && filteredLaporan.length > 0 && (
+              <div className="px-6 py-4 border-t border-gray-100 text-xs text-gray-400">
+                Menampilkan {filteredLaporan.length} dari {stats.total_antrian} laporan
+              </div>
+            )}
           </div>
 
         </main>
-
       </div>
-
     </div>
-  );
+  )
 }
 
-/* =========================================================
-   SIDEBAR ITEM
-========================================================= */
-
-function SidebarItem({
-  icon,
-  label,
-  active,
-  onClick
-}) {
+function SidebarItem({ icon, label, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -369,31 +320,19 @@ function SidebarItem({
           : 'text-gray-300 hover:bg-white/5 hover:text-white'
       }`}
     >
-      {icon}
-      {label}
+      {icon} {label}
     </button>
-  );
+  )
 }
 
-/* =========================================================
-   STAT CARD
-========================================================= */
-
-function StatCard({
-  label,
-  value
-}) {
+function StatCard({ label, value, icon, valueColor = 'text-gray-900' }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
-
-      <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-2">
-        {label}
+    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold text-gray-400 tracking-wider">{label}</p>
+        <span className="text-xl">{icon}</span>
       </div>
-
-      <div className="text-2xl font-black text-gray-900">
-        {value}
-      </div>
-
+      <p className={`text-3xl font-black ${valueColor}`}>{value}</p>
     </div>
-  );
+  )
 }

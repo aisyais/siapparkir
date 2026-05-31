@@ -239,8 +239,21 @@ export default function Dashboard() {
                     className="w-full bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
-                        🚗
+                      <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+                        {l.foto_bukti ? (
+                          <img
+                            src={`http://localhost:3000/uploads/${l.foto_bukti}`}
+                            alt="Bukti Laporan"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.log("GAGAL LOAD:", e.target.src)
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl">
+                            🚗
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-800">

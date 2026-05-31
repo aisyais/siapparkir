@@ -191,7 +191,6 @@ function LaporanListState({ laporan, selectedLaporan, onSelectLaporan, statistik
             <h3 className="font-bold text-gray-800">Daftar Laporan</h3>
             <p className="text-xs text-gray-500 mt-1">{laporan.length} laporan menunggu</p>
           </div>
-          // Cari bagian ini di dalam LaporanListState
           <div className="overflow-y-auto flex-1 divide-y max-h-96">
             {laporan.map((l, index) => (
               <button
@@ -319,7 +318,7 @@ function DetailLaporanCard({ laporan }) {
         {laporan.foto_bukti && (
           <div className="mb-6">
             <img
-              src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/uploads/${laporan.foto_bukti}`}
+              src={`http://localhost:3000/uploads/${laporan.foto_bukti}`}
               className="rounded-2xl w-full h-64 object-cover"
               alt="Bukti Laporan"
             />

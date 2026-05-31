@@ -139,7 +139,13 @@ export default function RiwayatPage() {
                   {/* Box Foto */}
                   <div className="w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">
                     {l.foto_bukti && (
-                      <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/uploads/${l.foto_bukti}`} className="w-full h-full object-cover" alt="" />
+                      <img
+                        src={`http://localhost:3000/uploads/${l.foto_bukti}`}
+                        onError={(e) => {
+                          console.log("GAGAL LOAD:", e.target.src)
+                        }}
+                        alt="Bukti Laporan"
+                      />
                     )}
                   </div>
 

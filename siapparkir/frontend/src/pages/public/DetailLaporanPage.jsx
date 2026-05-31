@@ -137,7 +137,7 @@ export default function DetailLaporanPage() {
             <SidebarItem
               icon="📋"
               label="Laporan Masuk"
-              onClick={() => navigate('/riwayat')}              
+              onClick={() => navigate('/lapor')}              
             />
 
             <SidebarItem
@@ -232,10 +232,12 @@ export default function DetailLaporanPage() {
 
                   {data.foto_bukti ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/storage/${data.foto_bukti}`}
-                      alt="Bukti"
-                      className="rounded-2xl w-full h-72 object-cover"
-                    />
+                        src={`http://localhost:3000/uploads/${data.foto_bukti}`}
+                        onError={(e) => {
+                          console.log("GAGAL LOAD:", e.target.src)
+                        }}
+                        alt="Bukti Laporan"
+                      />
                   ) : (
                     <div className="h-52 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400">
                       Tidak ada foto
