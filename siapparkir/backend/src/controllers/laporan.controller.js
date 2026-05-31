@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Laporan, KategoriPelanggaran, Penilaian } = require('../models');
+const { Laporan, KategoriPelanggaran, Penilaian, Tindakan } = require('../models');
 const { ok, fail } = require('../utils/response');
 const { generateKodeLaporan } = require('../utils/kodeGenerator');
 
@@ -51,27 +51,57 @@ exports.buatLaporan = async (req, res) => {
 // ============================================================
 // CEK STATUS — Masyarakat cek via kode laporan
 // ============================================================
+
 exports.cekStatus = async (req, res) => {
   try {
     const { kode } = req.query;
-    if (!kode) return fail(res, 'Kode laporan wajib diisi');
+
+    if (!kode)
+      return fail(res, 'Kode laporan wajib diisi');
 
     const laporan = await Laporan.findOne({
-      where: { kode_laporan: kode },
+      where: {
+        kode_laporan: kode
+      },
+
       attributes: [
-        'kode_laporan', 'nomor_plat', 'status_laporan',
-        'prioritas', 'waktu_laporan', 'alamat',
-        'jenis_kendaraan', 'foto_bukti',
+        'id_laporan',
+        'kode_laporan',
+        'nomor_plat',
+        'status_laporan',
+        'prioritas',
+        'waktu_laporan',
+        'alamat',
+        'jenis_kendaraan',
+        'foto_bukti'
       ],
-      include: [{
-        model: KategoriPelanggaran,
-        as: 'kategori',
-        attributes: ['nama_kategori'],
-      }],
+
+      include: [
+        {
+          model: KategoriPelanggaran,
+          as: 'kategori',
+          attributes: ['nama_kategori']
+        },
+
+        {
+          model: Tindakan,
+          as: 'tindakan',
+          attributes: [
+            'foto_tindakan',
+            'jenis_tindakan',
+            'catatan_tindakan',
+            'waktu_selesai'
+          ],
+          required: false
+        }
+      ]
     });
 
-    if (!laporan) return fail(res, 'Laporan tidak ditemukan', 404);
+    if (!laporan)
+      return fail(res, 'Laporan tidak ditemukan', 404);
+
     return ok(res, laporan);
+
   } catch (err) {
     console.error(err);
     return fail(res, 'Server error', 500);
