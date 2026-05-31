@@ -82,9 +82,8 @@ export default function PetugasDashboard() {
               </div>
             </button>
             <nav className="space-y-1.5">
-              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" active />
-              <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />
-              <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
+              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Daftar Tugas" active />
+              <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />              
             </nav>
           </div>
           <div className="pt-6 border-t border-white/10">

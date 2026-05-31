@@ -15,12 +15,13 @@ import PenilaianMasyarakat from '../pages/internal/admin/PenilaianMasyarakat'
 import PreviewPDF        from '../pages/internal/admin/PreviewPDF';
 import ProfilAdmin       from '../pages/internal/admin/ProfilAdmin'
 import PetugasDashboard  from '../pages/internal/petugas/PetugasDashboard'
-import PetugasTugas      from '../pages/internal/petugas/PetugasTugas'
 import LaporanMasuk      from '../pages/internal/petugas/LaporanMasuk'
 import ProfilPetugas     from '../pages/internal/petugas/ProfilPetugas'
 import DetailPenindakan   from '../pages/internal/petugas/DetailPenindakan'
+import SelesaiPenindakan from '../pages/internal/petugas/SelesaiPenindakan'
 import PrivateRoute      from './PrivateRoute'
 import SuksesPage        from '../pages/public/SuksesPage'
+
 import DetailLaporanPage from '../pages/public/DetailLaporanPage'
 
 export default function AppRouter() {
@@ -58,10 +59,10 @@ export default function AppRouter() {
         {/* Hak Akses: Petugas */}
         <Route element={<PrivateRoute role="petugas" />}>
           <Route path="/internal/petugas"       element={<PetugasDashboard />} />
-          <Route path="/internal/petugas/tugas" element={<PetugasTugas />} />
           <Route path="/internal/petugas/profil" element={<ProfilPetugas />} />
           <Route path="/internal/petugas/laporan" element={<LaporanMasuk/>} />
           <Route path="/internal/petugas/detail-penindakan/:id" element={<DetailPenindakan />} />
+          <Route path="/internal/petugas/selesai" element={<SelesaiPenindakan />} />
         </Route>
 
         {/* Jika mengetik rute asal, kembalikan ke Landing Page awal */}

@@ -155,7 +155,7 @@ export default function LaporanMasuk() {
 
               <SidebarItem
                 icon={<LayoutDashboard size={16} />}
-                label="Dashboard"
+                label="Daftar Tugas"
                 onClick={() => navigate('/internal/petugas')}
               />
 
@@ -163,12 +163,6 @@ export default function LaporanMasuk() {
                 icon={<ClipboardList size={16} />}
                 label="Laporan Masuk"
                 active
-              />
-
-              <SidebarItem
-                icon={<Users size={16} />}
-                label="Petugas Lapangan"
-                onClick={() => navigate('/internal/petugas/tugas')}
               />
 
             </nav>

@@ -119,9 +119,8 @@ export default function ProfilPetugas() {
                 </div>
                 </button>
             <nav className="space-y-1.5">
-              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" onClick={() => navigate('/internal/petugas')} />
+              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Daftar Tugas" onClick={() => navigate('/internal/petugas')} />
               <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />
-              <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
             </nav>
           </div>
           <div className="pt-6 border-t border-white/10">
