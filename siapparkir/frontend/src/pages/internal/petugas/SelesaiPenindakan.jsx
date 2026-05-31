@@ -56,6 +56,11 @@ export default function SelesaiPenindakan() {
               label="Laporan Masuk"
               onClick={() => navigate('/internal/petugas/laporan')}
             />
+            <SidebarItem
+              icon={<Users size={16}/>}
+              label="Petugas Lapangan"
+              onClick={() => navigate('/internal/petugas/tugas')}
+            />
           </nav>
           <button
             onClick={() => navigate('/internal/login')}

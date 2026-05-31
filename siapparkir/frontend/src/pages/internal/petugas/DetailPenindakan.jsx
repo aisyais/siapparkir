@@ -158,15 +158,20 @@ export default function DetailPenindakan() {
         <aside className="hidden md:flex w-64 bg-[#001A57] text-white flex-col justify-between p-6 shadow-xl">
           <nav className="space-y-1.5 mt-4">
             <SidebarItem
-              icon={<LayoutDashboard size={16} />}
-              label="Daftar Tugas"
+              icon={<LayoutDashboard size={16}/>}
+              label="Dashboard"
               onClick={() => navigate('/internal/petugas')}
             />
             <SidebarItem
-              icon={<ClipboardList size={16} />}
+              icon={<ClipboardList size={16}/>}
               label="Laporan Masuk"
               active
               onClick={() => navigate('/internal/petugas/laporan')}
+            />
+            <SidebarItem
+              icon={<Users size={16}/>}
+              label="Petugas Lapangan"
+              onClick={() => navigate('/internal/petugas/tugas')}
             />
           </nav>
           <button
