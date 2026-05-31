@@ -33,6 +33,9 @@ export default function PetugasDashboard() {
       });
       
       console.log("ISI RESPONS DASHBOARD:", res.data); 
+      if (res.data?.data?.tugas_aktif?.length > 0) {
+        console.log("DATA PERTAMA:", res.data.data.tugas_aktif[0]);
+      }
       
       // Karena backend getDashboard mengirim { tugas_aktif: [...] }
       setLaporan(Array.isArray(res.data.data.tugas_aktif) ? res.data.data.tugas_aktif : []);

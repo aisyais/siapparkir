@@ -23,9 +23,18 @@ exports.getDashboard = async (req, res) => {
         model: Laporan,
         include: [{ model: KategoriPelanggaran, as: 'kategori', attributes: ['nama_kategori'] }],
         attributes: [
-          'id_laporan', 'kode_laporan', 'nomor_plat', 'alamat',
-          'foto_bukti', 'prioritas', 'status_laporan',
-          'jenis_kendaraan', 'waktu_laporan', 'created_at',
+          'id_laporan',
+          'kode_laporan',
+          'nomor_plat',
+          'alamat',
+          'foto_bukti',
+          'prioritas',
+          'status_laporan',
+          'jenis_kendaraan',
+          'waktu_laporan',
+          'created_at',
+          'latitude',
+          'longitude'
         ],
       }],
       order: [
@@ -446,15 +455,19 @@ exports.getProfil = async (req, res) => {
 
 exports.updateProfil = async (req, res) => {
   try {
-    const { nama, email, no_hp, password } = req.body
+    // 1. Tambahkan status_petugas ke sini
+    const { nama, email, no_hp, password, status_petugas } = req.body
+    
     const user = await User.findByPk(req.user.id_user)
     if (!user) return fail(res, 'User tidak ditemukan', 404)
 
     const updateData = {
-      nama:        nama  || user.nama,
-      email:       email || user.email,
-      no_hp:       no_hp || user.no_hp,
-      foto_profil: req.file?.filename || user.foto_profil,
+      nama:          nama          || user.nama,
+      email:         email         || user.email,
+      no_hp:         no_hp         || user.no_hp,
+      // 2. Tambahkan ini agar masuk ke database
+      status_petugas: status_petugas || user.status_petugas, 
+      foto_profil:   req.file?.filename || user.foto_profil,
     }
 
     if (password && password.trim() !== '') {

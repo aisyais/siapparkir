@@ -94,7 +94,7 @@ export default function DetailPenindakan() {
                       </div>
                     </button>
                     <nav className="space-y-1.5">
-                      <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" onClick={() => navigate('/internal/petugas')} />
+                      <SidebarItem icon={<LayoutDashboard size={16}/>} label="Dashboard" active onClick={() => navigate('/internal/petugas')} />
                       <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" onClick={() => navigate('/internal/petugas/laporan')} />
                       <SidebarItem icon={<Users size={16}/>} label="Petugas Lapangan" onClick={() => navigate('/internal/petugas/tugas')} />
                     </nav>
@@ -107,7 +107,17 @@ export default function DetailPenindakan() {
                 </aside>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 p-8 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+      <main className="flex-1 p-8 overflow-y-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 mb-6 px-4 py-2 bg-white border border-gray-250 rounded-xl shadow-sm text-[#001A57] font-semibold transition-all duration-200 hover:bg-[#001A57] hover:text-white hover:border-[#001A57] hover:shadow-lg"
+          >
+            <ArrowLeft size={16} />
+            Kembali
+          </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* TARUH FOTO BUKTI DI SINI */}
             {dataTugas?.Laporan?.foto_bukti && (
@@ -177,7 +187,8 @@ export default function DetailPenindakan() {
               <CheckCircle size={18}/> Selesaikan Penugasan
             </button>
           </div>
-        </main>
+        </div>
+      </main>
       </div>
     </div>
   );

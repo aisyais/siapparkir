@@ -11,8 +11,9 @@ export default function ProfilPetugas() {
   const [formData, setFormData] = useState({
     nama: '',
     email: '',
-    telepon: '',
-    password: ''
+    no_hp: '',
+    password: '',
+    status_petugas: 'aktif' // Default status
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('/avatar-petugas.jpg');
@@ -50,6 +51,8 @@ export default function ProfilPetugas() {
     data.append('nama', formData.nama);
     data.append('email', formData.email);
     data.append('telepon', formData.telepon);
+    data.append('status_petugas', formData.status_petugas); // Pastikan ini terkirim
+    
     if (formData.password) data.append('password', formData.password);
     if (selectedFile) data.append('foto', selectedFile);
 
@@ -60,9 +63,14 @@ export default function ProfilPetugas() {
           'Content-Type': 'multipart/form-data'
         }
       });
+      
       alert('Profil berhasil diperbarui!');
       setIsEditing(false);
+      
+      // PENTING: Refresh data agar tampilan sesuai database terbaru
+      window.location.reload(); 
     } catch (err) {
+      console.error(err);
       alert('Gagal menyimpan data');
     }
   };
@@ -157,7 +165,26 @@ export default function ProfilPetugas() {
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs font-bold uppercase">Phone Number</label>
-                  {isEditing ? <input name="telepon" value={formData.telepon || ''} onChange={handleInputChange} className="w-full border-b-2 py-2 outline-none" /> : <p className="font-semibold text-lg">{formData.telepon}</p>}
+                  {isEditing ? <input name="no_hp" value={formData.no_hp || ''} onChange={handleInputChange} className="w-full border-b-2 py-2 outline-none" /> : <p className="font-semibold text-lg">{formData.no_hp}</p>}
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs font-bold uppercase">Status Petugas</label>
+                  {isEditing ? (
+                    <select 
+                      name="status_petugas" 
+                      // Pastikan ada fallback ke string kosong agar tidak undefined
+                      value={formData.status_petugas || ''} 
+                      onChange={handleInputChange} 
+                      className="w-full border-b-2 py-2 outline-none bg-transparent font-semibold text-lg"
+                    >
+                      <option value="">-- Pilih Status --</option>
+                      <option value="aktif">Aktif</option>
+                      <option value="istirahat">Istirahat</option>
+                      <option value="off">Off</option>
+                    </select>
+                  ) : (
+                    <p className="font-semibold text-lg">{formData.status_petugas || 'Belum diatur'}</p>
+                  )}
                 </div>
                 <div className="col-span-2 pt-6"> {/* Hapus class 'border-t' */}
                     <label className="text-gray-400 text-xs font-bold uppercase mb-2 block">Password</label>
