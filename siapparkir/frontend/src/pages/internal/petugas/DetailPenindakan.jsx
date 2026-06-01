@@ -217,14 +217,16 @@ export default function DetailPenindakan() {
                   Bukti Foto Pelapor
                 </h3>
                 {lap.foto_bukti ? (
-                  <img
-                    src={`http://localhost:3000/uploads/${lap.foto_bukti}`}
-                    alt="Bukti pelapor"
-                    className="w-full h-52 object-cover rounded-xl"
-                  />
+                  <div className="w-full h-[500px] bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-200 shadow-inner">
+                    <img
+                      src={`http://localhost:3000/uploads/${lap.foto_bukti}`}
+                      alt="Bukti pelapor"
+                      className="max-h-full w-auto object-contain"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-52 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
-                    Tidak ada foto
+                  <div className="w-full h-[500px] bg-gray-50 rounded-2xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200">
+                    <span>Tidak ada foto bukti</span>
                   </div>
                 )}
               </div>
@@ -397,28 +399,29 @@ export default function DetailPenindakan() {
                       id="inputFotoTindakan"
                     />
                     {previewFoto ? (
-                      <div className="relative">
+                      <div className="relative w-full h-[400px] bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
                         <img
                           src={previewFoto}
                           alt="Preview"
-                          className="w-full h-44 object-cover rounded-xl"
+                          className="w-full h-full object-contain"
                         />
                         <button
-                          onClick={() => { setFotoBukti(null); setPreviewFoto(null) }}
-                          className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg"
+                          onClick={() => { setFotoBukti(null); setPreviewFoto(null); }}
+                          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg transition-all"
                         >
-                          Ganti
+                          Ganti Foto
                         </button>
                       </div>
                     ) : (
                       <label
                         htmlFor="inputFotoTindakan"
-                        className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center cursor-pointer hover:bg-gray-50 transition"
+                        className="border-2 border-dashed border-gray-300 rounded-2xl h-[400px] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all"
                       >
-                        <Camera className="text-gray-400 mb-2" size={28} />
-                        <span className="text-xs font-bold text-gray-500">
-                          Ambil atau Unggah Foto Hasil
-                        </span>
+                        <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                          <Camera className="text-blue-500" size={32} />
+                        </div>
+                        <span className="text-sm font-bold text-gray-700">Ambil atau Unggah Foto Hasil</span>
+                        <span className="text-xs text-gray-400 mt-1">Klik untuk memilih file</span>
                       </label>
                     )}
                   </div>
