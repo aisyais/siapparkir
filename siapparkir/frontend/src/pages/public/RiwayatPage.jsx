@@ -52,7 +52,7 @@ export default function RiwayatPage() {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className="hidden md:flex w-52 bg-blue-950 flex-col py-6 px-4">
+        <aside className="hidden md:flex w-75 bg-blue-950 flex-col py-6 px-4">
 
           <div className="flex items-center gap-3 bg-blue-900 rounded-xl px-3 py-3 mb-6">
             <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
@@ -97,16 +97,14 @@ export default function RiwayatPage() {
 
           <button
             onClick={() => navigate('/')}
-            className="text-blue-300 text-sm py-2"
-          >
+            className="text-red-500 text-sm py-2 font-medium transition-all duration-300 hover:text-red-200 hover:translate-x-1 cursor-pointer"          >
             ← Keluar
           </button>
         </aside>
 
         {/* Main Content */}
-        {/* Main Content */}
         <main className="flex-1 p-6 md:p-8 bg-gray-50 overflow-y-auto">
-          <div className="max-w-5xl mx-auto space-y-6">
+          <div className="max-w-7xl mx-auto space-y-6">
             
             {/* Title */}
             <div>

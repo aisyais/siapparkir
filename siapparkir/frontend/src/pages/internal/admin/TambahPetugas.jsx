@@ -8,7 +8,6 @@ export default function TambahPetugas() {
   const token = useAuthStore((s) => s.token);
   const fileInputRef = useRef(null);
 
-  // State untuk form
   const [formData, setFormData] = useState({
     nama: '',
     email: '',
@@ -17,6 +16,7 @@ export default function TambahPetugas() {
     id_wilayah: '',
     status_petugas: 'aktif'
   });
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [wilayahList, setWilayahList] = useState([]);
@@ -98,13 +98,23 @@ export default function TambahPetugas() {
   };
 
   return (
-    <LayoutAdmin>
-      <div className="mb-8">
-        <button onClick={() => navigate('/internal/admin/petugas')} className="flex items-center text-gray-500 hover:text-gray-800 mb-2 transition">
-          <span className="mr-2">←</span> Kembali ke Manajemen Petugas
+    <>
+      <div className="mb-8 space-y-2">
+        <button
+          onClick={() => navigate('/internal/admin/petugas')}
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 active:scale-95 w-fit"
+        >
+          <span className="text-base">←</span>
+          Kembali
         </button>
-        <h2 className="text-3xl font-bold text-gray-900">Tambah Petugas Baru</h2>
-        <p className="text-gray-500 mt-1">Lengkapi detail informasi untuk mendaftarkan personil operasional baru.</p>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 leading-tight">
+            Tambah Petugas Baru
+          </h2>
+          <p className="text-gray-500 mt-2 text-sm leading-relaxed max-w-2xl">
+            Lengkapi detail informasi untuk mendaftarkan personil operasional baru.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -116,12 +126,20 @@ export default function TambahPetugas() {
             onClick={() => fileInputRef.current.click()}
             className="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center min-h-[200px]"
           >
-            {preview ? <img src={preview} alt="Preview" className="max-h-40 rounded-xl" /> : (
-              <>
-                <div className="text-4xl mb-3">📷</div>
-                <p className="text-sm text-gray-600 font-medium">Klik untuk pilih foto</p>
+            {preview ? (
+              <div className="w-full h-80 bg-white rounded-2xl flex items-center justify-center overflow-hidden border border-gray-200">
+                <img 
+                  src={preview} 
+                  alt="Preview" 
+                  className="max-h-full w-auto object-contain" 
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="text-5xl mb-4">📷</div>
+                <p className="text-sm text-gray-600 font-bold">Klik untuk pilih foto</p>
                 <p className="text-xs text-gray-400 mt-1">JPG, PNG up to 5MB</p>
-              </>
+              </div>
             )}
           </div>
           <p className="text-xs text-blue-600 mt-4 flex items-center">• Pastikan wajah terlihat jelas tanpa aksesoris.</p>
@@ -178,59 +196,6 @@ export default function TambahPetugas() {
           </div>
         </div>
       </div>
-    </LayoutAdmin>
-  );
-}
-
-/* Komponen LayoutAdmin, SidebarItem (sama dengan sebelumnya) */
-function LayoutAdmin({ children }) {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm">A</div>
-          <div><h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1><p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p></div>
-        </div>
-        {/* FOTO PROFIL DI HEADER */}
-        <button onClick={() => navigate('/internal/admin/profil')}>
-           <img src="/path-to-admin-photo.jpg" alt="Admin" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
-        </button>
-      </header>
-      <div className="flex flex-1">
-        <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          <div 
-            onClick={() => navigate('/internal/admin/profil')} 
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-            >
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">
-                🛡️
-                </div>
-                <div>
-                <h2 className="text-white font-bold text-sm">Administrator</h2>
-                <p className="text-blue-300 text-xs">Dishub Kota</p>
-                </div>
-            </div>
-            </div>
-          <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard" onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk" onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat" onClick={() => navigate('/internal/admin/penilaian')} />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas" onClick={() => navigate('/internal/admin/petugas')} />
-          </div>
-          <div className="p-4 border-t border-blue-900"><button onClick={() => navigate('/')} className="w-full text-blue-300 hover:text-white text-sm py-2 transition">← Keluar</button></div>
-        </aside>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-      </div>
-    </div>
-  );
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'}`}>
-      <span>{icon}</span><span>{label}</span>
-    </button>
+    </>
   );
 }

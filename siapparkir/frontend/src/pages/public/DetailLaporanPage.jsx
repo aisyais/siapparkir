@@ -151,8 +151,7 @@ export default function DetailLaporanPage() {
 
           <button
             onClick={() => navigate('/')}
-            className="text-blue-300 text-sm py-2"
-          >
+            className="text-red-500 text-sm py-2 font-medium transition-all duration-300 hover:text-red-200 hover:translate-x-1 cursor-pointer"          >
             ← Keluar
           </button>
 

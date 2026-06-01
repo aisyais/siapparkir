@@ -63,7 +63,7 @@ export default function Dashboard() {
       <div className="flex flex-1">
 
         {/* SIDEBAR */}
-        <aside className="hidden md:flex w-52 bg-blue-950 flex-col py-6 px-4">
+        <aside className="hidden md:flex w-75 bg-blue-950 flex-col py-6 px-4">
 
           <div className="flex items-center gap-3 bg-blue-900 rounded-xl px-3 py-3 mb-6">
             <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
@@ -108,24 +108,21 @@ export default function Dashboard() {
 
           <button
             onClick={() => navigate('/')}
-            className="text-blue-300 text-sm py-2"
-          >
+            className="text-red-500 text-sm py-2 font-medium transition-all duration-300 hover:text-red-200 hover:translate-x-1 cursor-pointer"          >
             ← Keluar
           </button>
         </aside>
 
         {/* MAIN CONTENT */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-
-          <div className="max-w-5xl mx-auto space-y-8">
-
+          <div className="max-w-7xl mx-auto space-y-8">
             {/* BANNER */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               <div className="lg:col-span-2 bg-gradient-to-r from-blue-950 to-blue-900 rounded-2xl p-8 relative overflow-hidden text-white flex flex-col justify-between shadow-sm min-h-[220px]">
 
                 <div className="absolute right-6 bottom-[-20px] text-[180px] font-black text-white opacity-5 select-none pointer-events-none leading-none">
-                  P
+                  PARKIR
                 </div>
 
                 <div className="max-w-md space-y-2 z-10">

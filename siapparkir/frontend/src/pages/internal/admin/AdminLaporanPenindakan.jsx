@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
 import useAuthStore from '../../../store/authStore'
+import AdminLayout from "../../../components/layout/AdminLayout";
 
 export default function AdminLaporanPenindakan() {
   const navigate = useNavigate()
@@ -181,8 +182,7 @@ export default function AdminLaporanPenindakan() {
   )
 
   return (
-    <LayoutAdmin>
-
+    <div className="space-y-6">
       {/* MODAL EKSPOR */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -192,6 +192,7 @@ export default function AdminLaporanPenindakan() {
             <p className="text-sm text-gray-500 mb-6">
               {total} laporan siap diekspor
             </p>
+
             <div className="flex flex-col gap-3">
               <button
                 onClick={exportToExcel}
@@ -199,12 +200,14 @@ export default function AdminLaporanPenindakan() {
               >
                 📊 Download Excel (.xlsx)
               </button>
+
               <button
                 onClick={handleExportPDF}
                 className="bg-blue-950 text-white py-3 rounded-xl font-bold hover:bg-blue-900 transition"
               >
                 📄 Preview & Cetak PDF
               </button>
+
               <button
                 onClick={() => setShowExportModal(false)}
                 className="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
@@ -218,17 +221,20 @@ export default function AdminLaporanPenindakan() {
 
       <div className="space-y-6">
 
-        {/* HEADER */}
+        {/* HEADER PAGE */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-black text-gray-900">Laporan Penindakan</h1>
+            <h1 className="text-3xl font-black text-gray-900">
+              Laporan Penindakan
+            </h1>
             <p className="text-gray-500 mt-1 text-sm">
               Manajemen database laporan dan aksi penegakan hukum.
             </p>
           </div>
+
           <button
             onClick={() => setShowExportModal(true)}
-            className="bg-blue-950 hover:bg-blue-900 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow-sm"
+            className="bg-blue-950 hover:bg-blue-900 text-white px-5 py-3 rounded-xl font-bold text-sm"
           >
             📤 Ekspor Data
           </button>
@@ -458,7 +464,7 @@ export default function AdminLaporanPenindakan() {
         )}
 
       </div>
-    </LayoutAdmin>
+    </div>
   )
 }
 
@@ -480,78 +486,3 @@ function StatBawah({ icon, label, value }) {
   )
 }
 
-function LayoutAdmin({ children }) {
-  const navigate = useNavigate()
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">A</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p>
-          </div>
-        </div>
-        <button onClick={() => navigate('/internal/admin/profil')}>
-          <img
-            src="/path-to-admin-photo.jpg"
-            alt="Admin"
-            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-          />
-        </button>
-      </header>
-      <div className="flex flex-1">
-        <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          <div
-            onClick={() => navigate('/internal/admin/profil')}
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">
-                🛡️
-              </div>
-              <div>
-                <h2 className="text-white font-bold text-sm">Administrator</h2>
-                <p className="text-blue-300 text-xs">Dishub Kota</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard"
-              onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk" active
-              onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat"
-              onClick={() => navigate('/internal/admin/penilaian')} />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas"
-              onClick={() => navigate('/internal/admin/petugas')} />
-          </div>
-          <div className="p-4 border-t border-blue-900">
-            <button
-              onClick={() => navigate('/')}
-              className="w-full text-blue-300 hover:text-white text-sm py-2 transition"
-            >
-              ← Keluar
-            </button>
-          </div>
-        </aside>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-      </div>
-    </div>
-  )
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-        active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'
-      }`}
-    >
-      <span>{icon}</span><span>{label}</span>
-    </button>
-  )
-}

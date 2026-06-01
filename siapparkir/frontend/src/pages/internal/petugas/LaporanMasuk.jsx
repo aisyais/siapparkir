@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import {
-  LayoutDashboard, ClipboardList, Users,
-  LogOut, User, Search, Filter
-} from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 import useAuthStore from '../../../store/authStore'
 
 export default function LaporanMasuk() {
   const navigate = useNavigate()
-  const token    = useAuthStore((s) => s.token)
+  const token = useAuthStore((s) => s.token)
 
-  const [fotoProfil, setFotoProfil] = useState('/avatar-petugas.jpg')
-  const [laporan, setLaporan]               = useState([])
+  const [laporan, setLaporan] = useState([])
   const [filteredLaporan, setFilteredLaporan] = useState([])
-  const [search, setSearch]                 = useState('')
-  const [loading, setLoading]               = useState(true)
-  const [stats, setStats]                   = useState({
-    total_antrian:    0,
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    total_antrian: 0,
     belum_verifikasi: 0,
     indikasi_duplikat: 0,
   })
@@ -30,21 +26,14 @@ export default function LaporanMasuk() {
           'http://localhost:3000/api/petugas/laporan-masuk',
           { headers: { Authorization: `Bearer ${token}` } }
         )
-
-        const payload   = res.data?.data || {}
-        if (payload.profil?.foto_profil) {
-          setFotoProfil(
-            `http://localhost:3000/uploads/${payload.profil.foto_profil}`
-          )
-        }
-
+        const payload = res.data?.data || {}
         const dataArray = Array.isArray(payload.data) ? payload.data : []
 
         setLaporan(dataArray)
         setFilteredLaporan(dataArray)
         setStats({
-          total_antrian:     payload.statistik?.total_antrian     || 0,
-          belum_verifikasi:  payload.statistik?.belum_verifikasi  || 0,
+          total_antrian: payload.statistik?.total_antrian || 0,
+          belum_verifikasi: payload.statistik?.belum_verifikasi || 0,
           indikasi_duplikat: payload.statistik?.indikasi_duplikat || 0,
         })
       } catch (err) {
@@ -53,35 +42,9 @@ export default function LaporanMasuk() {
         setLoading(false)
       }
     }
-
-    const fetchProfil = async () => {
-      try {
-        const res = await axios.get(
-          'http://localhost:3000/api/petugas/profil',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-
-        const profil = res.data?.data
-
-        if (profil?.foto_profil) {
-          setFotoProfil(
-            `http://localhost:3000/uploads/${profil.foto_profil}`
-          )
-        }
-      } catch (err) {
-        console.error('Gagal mengambil profil:', err)
-      }
-    }
-
-    fetchProfil()
     fetchData()
   }, [token])
 
-  // Filter search — jalankan saat search atau laporan berubah
   useEffect(() => {
     if (!search.trim()) {
       setFilteredLaporan(laporan)
@@ -91,7 +54,7 @@ export default function LaporanMasuk() {
     setFilteredLaporan(
       laporan.filter((item) =>
         item.kode_laporan?.toLowerCase().includes(keyword) ||
-        item.nomor_plat?.toLowerCase().includes(keyword)  ||
+        item.nomor_plat?.toLowerCase().includes(keyword) ||
         item.alamat?.toLowerCase().includes(keyword)
       )
     )
@@ -107,129 +70,49 @@ export default function LaporanMasuk() {
 
   const STATUS_STYLE = {
     menunggu_verifikasi: 'bg-yellow-50 text-yellow-600',
-    diverifikasi:        'bg-blue-50 text-blue-600',
-    ditolak:             'bg-red-50 text-red-600',
+    diverifikasi: 'bg-blue-50 text-blue-600',
+    ditolak: 'bg-red-50 text-red-600',
   }
 
   const STATUS_LABEL = {
     menunggu_verifikasi: 'Pending',
-    diverifikasi:        'Verifikasi',
-    ditolak:             'Ditolak',
+    diverifikasi: 'Verifikasi',
+    ditolak: 'Ditolak',
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="space-y-8">
+      {/* TITLE */}
+      <div>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Antrian Laporan Masuk</h1>
+        <p className="text-gray-500 text-sm">Verifikasi dan tugaskan petugas untuk laporan pelanggaran terbaru.</p>
+      </div>
 
-      {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">P</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-800 leading-none">SiapParkir</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Laporan Masuk Petugas Lapangan</p>
-          </div>
-        </div>
-        <button onClick={() => navigate('/internal/petugas/profil')}>
-          <img
-            src={fotoProfil}
-            alt="Petugas"
-            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-            onError={(e) => {
-              e.target.src = '/avatar-petugas.jpg';
-            }}
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <StatCard label="TOTAL ANTRIAN" value={stats.total_antrian} icon="📋" />
+        <StatCard label="BELUM DIVERIFIKASI" value={stats.belum_verifikasi} icon="🔴" valueColor="text-red-600" />
+        <StatCard label="INDIKASI DUPLIKAT" value={stats.indikasi_duplikat} icon="📄" />
+      </div>
+
+      {/* SEARCH & FILTER */}
+      <div className="flex gap-3">
+        <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <Search className="text-gray-400" size={16} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari ID Laporan, Nopol, atau Lokasi..."
+            className="bg-transparent outline-none text-sm w-full"
           />
-        </button>
-      </header>
+        </div>
+      </div>
 
-      <div className="flex flex-1">
-
-        {/* SIDEBAR */}
-        <aside className="hidden md:flex w-64 bg-[#001A57] text-white flex-col justify-between p-6 shadow-xl">
-          <div className="space-y-8">
-            <button
-              onClick={() => navigate('/internal/petugas/profil')}
-              className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-all text-left"
-            >
-              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs text-gray-400 font-medium">Masuk sebagai</div>
-                <div className="text-sm font-bold tracking-wide">Petugas</div>
-              </div>
-            </button>
-            <nav className="space-y-1.5">
-              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Daftar Tugas" onClick={() => navigate('/internal/petugas')} />
-              <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" active onClick={() => navigate('/internal/petugas/laporan')} />              
-            </nav>
-          </div>
-          <div className="pt-6 border-t border-white/10">
-            <button
-              onClick={() => navigate('/internal/login')}
-              className="flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl text-red-300 hover:bg-red-500/10 transition-all"
-            >
-              <LogOut size={16} /> Keluar
-            </button>
-          </div>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <main className="flex-1 p-6 sm:p-10 overflow-y-auto">
-
-          {/* TITLE */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
-              Antrian Laporan Masuk
-            </h1>
-            <p className="text-gray-500 text-sm">
-              Verifikasi dan tugaskan petugas untuk laporan pelanggaran terbaru.
-            </p>
-          </div>
-
-          {/* STAT CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-            <StatCard
-              label="TOTAL ANTRIAN"
-              value={stats.total_antrian}
-              icon="📋"
-            />
-            <StatCard
-              label="BELUM DIVERIFIKASI"
-              value={stats.belum_verifikasi}
-              icon="🔴"
-              valueColor="text-red-600"
-            />
-            <StatCard
-              label="INDIKASI DUPLIKAT"
-              value={stats.indikasi_duplikat}
-              icon="📄"
-            />
-          </div>
-
-          {/* SEARCH & FILTER */}
-          <div className="flex gap-3 mb-5">
-            <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <Search className="text-gray-400 flex-shrink-0" size={16} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari ID Laporan, Nopol, atau Lokasi..."
-                className="bg-transparent outline-none text-sm w-full"
-              />
-            </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 bg-white rounded-xl hover:bg-gray-50 shadow-sm transition">
-              <Filter size={16} />
-              Filter
-            </button>
-          </div>
-
-          {/* TABLE */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider">
+      {/* TABLE */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="px-6 py-4">ID Laporan</th>
                   <th className="px-6 py-4">Foto Bukti</th>
@@ -315,34 +198,9 @@ export default function LaporanMasuk() {
                   ))
                 )}
               </tbody>
-            </table>
-
-            {/* FOOTER TABLE */}
-            {!loading && filteredLaporan.length > 0 && (
-              <div className="px-6 py-4 border-t border-gray-100 text-xs text-gray-400">
-                Menampilkan {filteredLaporan.length} dari {stats.total_antrian} laporan
-              </div>
-            )}
-          </div>
-
-        </main>
+        </table>
       </div>
     </div>
-  )
-}
-
-function SidebarItem({ icon, label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
-        active
-          ? 'bg-[#BCE3FF] text-[#001A57]'
-          : 'text-gray-300 hover:bg-white/5 hover:text-white'
-      }`}
-    >
-      {icon} {label}
-    </button>
   )
 }
 

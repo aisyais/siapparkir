@@ -7,6 +7,7 @@ export default function PenilaianMasyarakat() {
   const navigate = useNavigate()
   const token    = useAuthStore((s) => s.token)
 
+  const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg')
   const [dataPenilaian, setDataPenilaian] = useState([])
   const [loading, setLoading]             = useState(true)
   const [statistik, setStatistik]         = useState({
@@ -35,6 +36,13 @@ export default function PenilaianMasyarakat() {
           umpan_balik:      payload.statistik?.umpan_balik      || 0,
           rata_rata_rating: payload.statistik?.rata_rata_rating || 0,
         })
+        // Fetch Profil
+        const profilRes = await axios.get('http://localhost:3000/api/admin/profil', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (profilRes.data?.data?.foto_profil) {
+          setPreviewUrl(`http://localhost:3000/uploads/${profilRes.data.data.foto_profil}`)
+        }
       } catch (err) {
         console.error('Gagal mengambil data penilaian:', err)
         setDataPenilaian([])
@@ -63,9 +71,9 @@ export default function PenilaianMasyarakat() {
   }
 
   return (
-    <LayoutAdmin>
+    <>
 
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-3xl font-extrabold text-gray-900 mb-6 tracking-tight">
         Penilaian Masyarakat
       </h2>
 
@@ -124,7 +132,7 @@ export default function PenilaianMasyarakat() {
               </div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-bold">
+                <thead className="bg-gray-50 text-gray-600 uppercase text-sm font-bold tracking-wide">
                   <tr>
                     <th className="px-6 py-4 text-left">Kode Laporan</th>
                     <th className="px-6 py-4 text-left">Penilaian</th>
@@ -189,7 +197,7 @@ export default function PenilaianMasyarakat() {
           </div>
         </>
       )}
-    </LayoutAdmin>
+    </>
   )
 }
 
@@ -197,92 +205,16 @@ export default function PenilaianMasyarakat() {
 // KOMPONEN PENDUKUNG
 // ============================================================
 
-function StatCard({ title, value, icon, valueColor = 'text-gray-900' }) {
+function StatCard({ title, value, valueColor = 'text-gray-900' }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-      <div className="text-xs font-bold text-gray-400 mb-2">{title}</div>
-      <div className="flex items-end justify-between">
-        <div className={`text-3xl font-black ${valueColor}`}>{value}</div>
-        <div className="text-2xl">{icon}</div>
-      </div>
-    </div>
-  )
-}
+    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+      <p className="text-sm text-gray-400 font-medium">
+        {title}
+      </p>
 
-function LayoutAdmin({ children }) {
-  const navigate = useNavigate()
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">A</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p>
-          </div>
-        </div>
-        <button onClick={() => navigate('/internal/admin/profil')}>
-          <img
-            src="/path-to-admin-photo.jpg"
-            alt="Admin"
-            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-          />
-        </button>
-      </header>
-      <div className="flex flex-1">
-        <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          <div
-            onClick={() => navigate('/internal/admin/profil')}
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">
-                🛡️
-              </div>
-              <div>
-                <h2 className="text-white font-bold text-sm">Administrator</h2>
-                <p className="text-blue-300 text-xs">Dishub Kota</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard"
-              onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk"
-              onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat"
-              onClick={() => navigate('/internal/admin/penilaian')} active />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas"
-              onClick={() => navigate('/internal/admin/petugas')} />
-          </div>
-          <div className="p-4 border-t border-blue-900">
-            <button
-              onClick={() => navigate('/')}
-              className="w-full text-blue-300 hover:text-white text-sm py-2 transition"
-            >
-              ← Keluar
-            </button>
-          </div>
-        </aside>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-      </div>
+      <p className={`text-3xl font-extrabold mt-2 tracking-tight ${valueColor}`}>
+        {value}
+      </p>
     </div>
-  )
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-        active
-          ? 'bg-blue-800 text-white'
-          : 'text-blue-300 hover:bg-blue-900 hover:text-white'
-      }`}
-    >
-      <span>{icon}</span><span>{label}</span>
-    </button>
   )
 }

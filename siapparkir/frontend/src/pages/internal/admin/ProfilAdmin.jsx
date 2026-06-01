@@ -98,8 +98,8 @@ export default function ProfilAdmin() {
   };
 
   return (
-    <LayoutAdmin previewUrl={previewUrl}>
-      <div className="max-w-4xl mx-auto">
+    <>
+      <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Account Information</h2>
           <button 
@@ -115,7 +115,7 @@ export default function ProfilAdmin() {
             <img
               src={previewUrl}
               alt="Admin"
-              className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+              className="w-50 h-50 rounded-full border border-gray-200 object-cover"
               onError={(e) => {
                 e.target.src = '/avatar-admin.jpg';
               }}
@@ -168,71 +168,6 @@ export default function ProfilAdmin() {
           </div>
         </div>
       </div>
-    </LayoutAdmin>
-  );
-}
-
-/* Komponen LayoutAdmin, SidebarItem (sama dengan sebelumnya) */
-function LayoutAdmin({ children, previewUrl }) {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm">A</div>
-          <div><h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1><p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p></div>
-        </div>
-        {/* FOTO PROFIL DI HEADER */}
-        <button onClick={() => navigate('/internal/admin/profil')}>
-          <img
-            src={previewUrl}
-            alt="Admin"
-            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-            onError={(e) => {
-              e.target.src = '/avatar-admin.jpg';
-            }}
-          />
-        </button>
-      </header>
-      <div className="flex flex-1">
-        <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          <div 
-            onClick={() => navigate('/internal/admin/profil')} 
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-            >
-            <div className="flex items-center gap-3">
-                <img
-                  src={previewUrl}
-                  alt="Admin"
-                  className="w-10 h-10 rounded-full object-cover border border-white/20"
-                  onError={(e) => {
-                    e.target.src = '/avatar-admin.jpg';
-                  }}
-                />
-                <div>
-                <h2 className="text-white font-bold text-sm">Administrator</h2>
-                <p className="text-blue-300 text-xs">Dishub Kota</p>
-                </div>
-            </div>
-            </div>
-          <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard" onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk" onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat" onClick={() => navigate('/internal/admin/penilaian')} />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas" onClick={() => navigate('/internal/admin/petugas')} />
-          </div>
-          <div className="p-4 border-t border-blue-900"><button onClick={() => navigate('/')} className="w-full text-blue-300 hover:text-white text-sm py-2 transition">← Keluar</button></div>
-        </aside>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-      </div>
-    </div>
-  );
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'}`}>
-      <span>{icon}</span><span>{label}</span>
-    </button>
+    </>
   );
 }

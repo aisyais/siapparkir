@@ -149,92 +149,24 @@ export default function DetailPenindakan() {
   const sudahSelesai = penugasan.status_penugasan === 'selesai'
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="max-w-8xl mx-auto">
+      {/* Tombol Back */}
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-500 mb-6 hover:text-gray-800">
+        <ArrowLeft size={16} /> Kembali
+      </button>
 
-      {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-xl transition"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </button>
-          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
-            <span className="text-white font-black text-sm">P</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-800 leading-none">SiapParkir</h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {sudahSelesai ? 'Detail Riwayat Penindakan' : 'Detail Penindakan'}
-            </p>
-          </div>
-        </div>
-        <img
-          src="/avatar-petugas.jpg"
-          alt="Petugas"
-          className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-        />
-      </header>
+      {/* Konten Halaman (Layout Header/Sidebar sudah dihapus) */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-900">#{lap.kode_laporan || '-'}</h2>
+        {sudahSelesai ? (
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-700">✓ Penindakan Selesai</span>
+        ) : (
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600">Membutuhkan Penindakan</span>
+        )}
+      </div>
 
-      <div className="flex flex-1">
-
-        {/* SIDEBAR */}
-        <aside className="hidden md:flex w-64 bg-[#001A57] text-white flex-col justify-between p-6 shadow-xl">
-          <nav className="space-y-1.5 mt-4">
-            <SidebarItem
-              icon={<LayoutDashboard size={16}/>}
-              label="Dashboard"
-              onClick={() => navigate('/internal/petugas')}
-            />
-            <SidebarItem
-              icon={<ClipboardList size={16}/>}
-              label="Laporan Masuk"
-              onClick={() => navigate('/internal/petugas/laporan')}
-            />
-            <SidebarItem
-              icon={<History size={16}/>}
-              label="Riwayat Penindakan"
-              active={sudahSelesai}
-              onClick={() => navigate('/internal/petugas/tugas')}
-            />
-          </nav>
-          <button
-            onClick={() => navigate('/internal/login')}
-            className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-red-300 hover:bg-red-500/10 rounded-xl transition"
-          >
-            <LogOut size={16} /> Keluar
-          </button>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
-
-          {/* PAGE HEADER */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3 mb-1 flex-wrap">
-              <h2 className="text-xl font-bold text-gray-900">
-                #{lap.kode_laporan || '-'}
-              </h2>
-              {/* Badge status */}
-              {sudahSelesai ? (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-700">
-                  ✓ Penindakan Selesai
-                </span>
-              ) : (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600">
-                  Membutuhkan Penindakan
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-400">
-              Dilaporkan {formatTanggal(lap.waktu_laporan)}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* KOLOM KIRI — Info Laporan */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* KOLOM KIRI — Info Laporan */}
             <div className="space-y-5">
 
               {/* Info Pelanggaran */}
@@ -412,14 +344,6 @@ export default function DetailPenindakan() {
                       </div>
                     )}
                   </div>
-
-                  {/* Tombol kembali */}
-                  <button
-                    onClick={() => navigate('/internal/petugas/tugas')}
-                    className="w-full py-3.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
-                  >
-                    ← Kembali ke Riwayat
-                  </button>
                 </>
               )}
 
@@ -549,26 +473,7 @@ export default function DetailPenindakan() {
                   </div>
                 </>
               )}
-
-            </div>
-          </div>
-        </main>
+        </div>
       </div>
     </div>
-  )
-}
-
-function SidebarItem({ icon, label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${
-        active
-          ? 'bg-[#BCE3FF] text-[#001A57]'
-          : 'text-gray-300 hover:bg-white/5 hover:text-white'
-      }`}
-    >
-      {icon} {label}
-    </button>
-  )
-}
+  )}

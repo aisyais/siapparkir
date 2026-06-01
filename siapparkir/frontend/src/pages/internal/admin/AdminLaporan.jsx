@@ -1,538 +1,196 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
-import { useLocation } from 'react-router-dom';
+import { Clock, AlertTriangle, FileText, MapPin, AlignLeft, Tag } from 'lucide-react';
 
 export default function AdminLaporan() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const location = useLocation();
   const selectedId = location.state?.selectedId;
-  const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg');
+
   const [laporan, setLaporan] = useState([]);
   const [statistik, setStatistik] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedLaporan, setSelectedLaporan] = useState(null);
 
   const fetchData = useCallback(async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
+      const [laporanRes, statsRes] = await Promise.all([
+        axios.get('http://localhost:3000/api/admin/laporan?status=menunggu_verifikasi', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get('http://localhost:3000/api/admin/dashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ]);
 
-    const laporanRes = await axios.get(
-      'http://localhost:3000/api/admin/laporan?status=menunggu_verifikasi',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const laporanData = Array.isArray(laporanRes.data?.data?.data) ? laporanRes.data.data.data : [];
+      setLaporan(laporanData);
+      setStatistik(statsRes.data?.data?.statistik || {});
+
+      if (laporanData.length > 0) {
+        const found = selectedId ? laporanData.find(l => l.id_laporan === selectedId) : laporanData[0];
+        setSelectedLaporan(found || laporanData[0]);
       }
-    );
-
-    console.log('RESPON LAPORAN:', laporanRes.data);
-
-    const laporanData = Array.isArray(
-      laporanRes.data?.data?.data
-    )
-      ? laporanRes.data.data.data
-      : [];
-
-    console.log('ARRAY LAPORAN:', laporanData);
-
-    setLaporan(laporanData);
-
-    if (laporanData.length > 0) {
-      if (selectedId) {
-        const laporanDipilih = laporanData.find(
-          (l) => l.id_laporan === selectedId
-        );
-
-        setSelectedLaporan(
-          laporanDipilih || laporanData[0]
-        );
-      } else {
-        setSelectedLaporan(laporanData[0]);
-      }
-
-    } else {
-      setSelectedLaporan(null);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
     }
+  }, [token, selectedId]);
 
-    const statsRes = await axios.get(
-      'http://localhost:3000/api/admin/dashboard',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    setStatistik(
-      statsRes.data?.data?.statistik || {}
-    );
-    const profilRes = await axios.get(
-      'http://localhost:3000/api/admin/profil',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-
-    if (profilRes.data?.data?.foto_profil) {
-      setPreviewUrl(
-        `http://localhost:3000/uploads/${profilRes.data.data.foto_profil}`
-      );
-    }
-  } catch (err) {
-    console.error(
-      'Gagal fetch data:',
-      err.response?.data || err
-    );
-  } finally {
-    setLoading(false);
-  }
-}, [token]);
   useEffect(() => {
-  if (!token) return;
+    if (token) fetchData();
+  }, [token, fetchData]);
 
-  fetchData();
-}, [token, fetchData]);
   return (
-    <LayoutAdmin previewUrl={previewUrl}>
-      {loading ? (
-        <div className="bg-white p-10 rounded-2xl border text-center">
-          Memuat data...
+    <div className="max-w-[95%] mx-auto p-6 lg:p-8 space-y-8 bg-gray-50/50 min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Verifikasi Laporan</h2>
+          <p className="text-gray-500 mt-1">Kelola dan tindak lanjuti laporan pelanggaran parkir masyarakat.</p>
         </div>
-      ) : laporan.length === 0 ? (
-        <EmptyState statistik={statistik} navigate={navigate} />
-      ) : (
-        <LaporanListState
-          laporan={laporan}
-          selectedLaporan={selectedLaporan}
-          onSelectLaporan={setSelectedLaporan}
-          statistik={statistik}
-        />
-      )}
-    </LayoutAdmin>
-  );
-}
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-function EmptyState({ statistik, navigate }) {
-  return (
-    <>
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">
-        Verifikasi Laporan
-      </h2>
-
-      {/* Statistik */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Menunggu"
-          value={statistik?.antrean_verifikasi || 0}
-          icon="📋"
-        />
-        <StatCard
-          title="Prioritas Tinggi"
-          value={statistik?.prioritas_tinggi || 0}
-          icon="🚨"
-        />
-        <StatCard
-          title="Potensi Duplikat"
-          value={statistik?.duplikat || 0}
-          icon="📄"
-        />
-        <StatCard
-          title="Disetujui Hari Ini"
-          value={statistik?.disetujui_hari_ini || 0}
-          icon="✅"
-        />
-      </div>
-
-      {/* EMPTY */}
-      <div className="bg-white p-12 rounded-3xl border border-dashed text-center shadow-sm">
-        <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <span className="text-4xl">📋</span>
-        </div>
-
-        <h3 className="text-2xl font-bold text-gray-800">
-          Belum ada laporan masuk
-        </h3>
-
-        <p className="text-gray-500 mt-3 max-w-md mx-auto">
-          Semua laporan telah diproses atau belum ada pengaduan baru dari masyarakat.
-        </p>
-
-        <button 
+        <button
           onClick={() => navigate('/internal/admin/laporan_penindakan')}
-          className="mt-6 bg-blue-950 hover:bg-blue-900 text-white px-8 py-3 rounded-2xl font-semibold transition"
+          className="bg-blue-950 hover:bg-blue-900 text-white px-6 py-3 rounded-2xl font-semibold transition-all shadow-lg flex items-center gap-2"
         >
-          Laporan Penindakan
+          <FileText size={18} /> Riwayat Penindakan
         </button>
       </div>
-    </>
-  );
-}
 
-/* =========================================================
-   LAPORAN LIST STATE
-========================================================= */
-
-function LaporanListState({ laporan, selectedLaporan, onSelectLaporan, statistik }) {
-  return (
-    <>
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">
-        Verifikasi Laporan
-      </h2>
-
-      {/* Statistik */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Menunggu"
-          value={statistik?.antrean_verifikasi || laporan.length}
-          icon="📋"
-        />
-        <StatCard
-          title="Prioritas Tinggi"
-          value={statistik?.prioritas_tinggi || 0}
-          icon="🚨"
-        />
-        <StatCard
-          title="Potensi Duplikat"
-          value={statistik?.duplikat || 0}
-          icon="📄"
-        />
-        <StatCard
-          title="Disetujui Hari Ini"
-          value={statistik?.disetujui_hari_ini || 0}
-          icon="✅"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* DAFTAR LAPORAN */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 border-b bg-gray-50">
-            <h3 className="font-bold text-gray-800">Daftar Laporan</h3>
-            <p className="text-xs text-gray-500 mt-1">{laporan.length} laporan menunggu</p>
-          </div>
-          <div className="overflow-y-auto flex-1 divide-y max-h-96">
-            {laporan.map((l, index) => (
-              <button
-                key={l.id_laporan || index} // Ganti 'l.id' menjadi 'l.id_laporan'
-                onClick={() => onSelectLaporan(l)}
-                className={`w-full text-left p-4 transition ${
-                  selectedLaporan?.id_laporan === l.id_laporan // Ganti 'id' menjadi 'id_laporan'
-                    ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <p className="font-bold text-sm text-gray-900">{l.kode_laporan}</p> {/* Gunakan kode_laporan */}
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{l.alamat}</p>
-              </button>
-            ))}
-          </div>
+      {loading ? (
+        <div className="text-center p-20 text-gray-400">Memuat data...</div>
+      ) : laporan.length === 0 ? (
+        <div className="bg-white p-16 rounded-3xl border border-dashed text-center shadow-sm">
+          <h3 className="text-xl font-bold text-gray-800">Semua laporan telah diproses!</h3>
         </div>
-
-        {/* DETAIL LAPORAN */}
-        {selectedLaporan && (
-          <DetailLaporanCard laporan={selectedLaporan} />
-        )}
-      </div>
-    </>
-  );
-}
-
-function DetailLaporanCard({ laporan }) {
-  const [tindakan, setTindakan] = useState('setujui');
-  const [petugasList, setPetugasList] = useState([]);
-  const [loadingPetugas, setLoadingPetugas] = useState(true);
-  const [petugas, setPetugas] = useState('');
-  const [alasanTolak, setAlasanTolak] = useState('');
-  
-  // Mengambil token dari store untuk otentikasi
-  const token = useAuthStore((s) => s.token);
-
-  useEffect(() => {
-    const fetchPetugas = async () => {
-      try {
-        setLoadingPetugas(true);
-        // Sesuaikan URL endpoint dengan backend Anda
-        const res = await axios.get('http://localhost:3000/api/admin/petugas?status=aktif', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log("PETUGAS RESPONSE:", res.data);
-        const petugasData = Array.isArray(
-          res.data?.data?.data
-        )
-          ? res.data.data.data
-          : [];
-
-        console.log("PETUGAS ARRAY:", petugasData);
-
-        setPetugasList(petugasData);
-        // Pastikan struktur response sesuai, misal res.data.data
-        
-      } catch (err) {
-        console.error("Gagal mengambil data petugas:", err);
-      } finally {
-        setLoadingPetugas(false);
-      }
-    };
-
-    fetchPetugas();
-  }, [token]);
-
-  const handleAction = async () => {
-    const idLaporan = laporan.id_laporan;
-    console.log("ID Laporan yang akan diproses:", idLaporan);
-
-    if (!idLaporan) {
-      alert("Error: ID Laporan tidak ditemukan!");
-      return;
-    }
-    try {
-      if (tindakan === 'setujui') {
-        // Pastikan semua data yang diminta backend dikirim
-        const payload = {
-          id_petugas: petugas, // Sesuaikan dengan yang dipilih di <select>
-          tindakan_direkomendasikan: 'tindak_lanjut', // Berikan nilai default jika di UI belum ada
-          catatan_tugas: 'Segera tangani laporan ini', // Berikan nilai default
-          batas_waktu_penanganan: new Date().toISOString() // Berikan nilai default/tgl hari ini
-        };
-
-        await axios.post(
-          `http://localhost:3000/api/admin/laporan/${idLaporan}/tugaskan`, 
-          payload, 
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        // GUNAKAN idLaporan DI URL
-        await axios.put(
-          `http://localhost:3000/api/admin/laporan/${idLaporan}/tolak`, 
-          { catatan: alasanTolak }, 
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-
-      alert("Aksi berhasil diproses!");
-      window.location.reload();
-    } catch (err) {
-      console.error("Detail Error:", err.response?.data || err);
-      alert("Gagal: " + (err.response?.data?.message || "Terjadi kesalahan"));
-    }
-  };
-
-  return (
-    <div className="lg:col-span-2">
-      <div className="bg-white p-6 rounded-3xl border shadow-sm">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">
-              {laporan.kode_laporan}
-            </h3>
-            <span className="inline-block mt-1 text-red-600 text-xs font-bold bg-red-50 px-2 py-1 rounded">
-              SLA &lt; 1 Jam
-            </span>
-          </div>
-          <p className="text-sm text-gray-400 font-medium">
-            {new Date(laporan.created_at).toLocaleDateString('id-ID')}
-          </p>
-        </div>
-
-        {laporan.foto_bukti && (
-          <div className="mb-6">
-            <img
-              src={`http://localhost:3000/uploads/${laporan.foto_bukti}`}
-              className="rounded-2xl w-full h-64 object-cover"
-              alt="Bukti Laporan"
-            />
-          </div>
-        )}
-
-        <h4 className="font-bold text-gray-800 mb-2 uppercase text-sm tracking-wide">Informasi Lokasi</h4>
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700 font-medium mb-6">
-          {laporan.alamat}
-        </div>
-
-        <h4 className="font-bold text-gray-800 mb-2 uppercase text-sm tracking-wide">Kategori</h4>
-        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-900 font-medium mb-6">
-          {laporan.KategoriPelanggaran?.nama_kategori || 'Kategori tidak diketahui'}
-        </div>
-
-        <h4 className="font-bold text-gray-800 mb-2 uppercase text-sm tracking-wide">Deskripsi</h4>
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700 mb-6">
-          {laporan.deskripsi}
-        </div>
-
-        {/* PANEL ACTION */}
-        <div className="bg-white p-6 rounded-3xl border shadow-sm mt-6">
-          <div className="flex gap-4 mb-6">
-            <button 
-              onClick={() => setTindakan('setujui')}
-              className={`flex-1 py-3 rounded-2xl font-bold ${tindakan === 'setujui' ? 'bg-blue-950 text-white' : 'bg-gray-100 text-gray-600'}`}
-            >
-              Setujui
-            </button>
-            <button 
-              onClick={() => setTindakan('tolak')}
-              className={`flex-1 py-3 rounded-2xl font-bold ${tindakan === 'tolak' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'}`}
-            >
-              Tolak
-            </button>
-          </div>
-
-          {tindakan === 'setujui' ? (
-            <div>
-              <h4 className="font-bold mb-2">🛠 Penugasan Lapangan</h4>
-              {loadingPetugas ? (
-                <p className="text-sm text-gray-400">Memuat petugas...</p>
-              ) : (
-                <select 
-                  className="w-full p-3 border rounded-xl mb-4" 
-                  onChange={(e) => setPetugas(e.target.value)}
-                  value={petugas}
-                >
-                  <option value="">Pilih Petugas yang Tersedia...</option>
-                  {Array.isArray(petugasList) && petugasList.map((p, index) => (
-                    // UBAH p.id MENJADI p.id_user DI BAWAH INI
-                    <option key={p.id_user || `petugas-${index}`} value={p.id_user}>
-                      {p.nama} ({p.unit})
-                    </option>
-                  ))}
-                </select>
-              )}
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-4 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+               <StatCard title="Menunggu" value={statistik.antrean_verifikasi || laporan.length} icon={<Clock size={20}/>} />
+               <StatCard title="Prioritas" value={statistik.prioritas_tinggi || 0} icon={<AlertTriangle size={20}/>} />
             </div>
-          ) : (
-            <div>
-              <h4 className="font-bold mb-2">❌ Alasan Penolakan</h4>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {['Foto Kurang Jelas', 'Bukan Pelanggaran', 'Laporan Duplikat'].map((alasan) => (
-                  <button 
-                    key={alasan}
-                    type="button"
-                    onClick={() => setAlasanTolak(alasan)}
-                    className={`text-xs p-2 rounded-lg border ${alasanTolak === alasan ? 'bg-red-100 border-red-500' : 'border-gray-200'}`}
-                  >
-                    {alasan}
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden h-[450px] flex flex-col">
+              <div className="p-6 border-b border-gray-50 font-bold text-gray-800">Daftar Laporan</div>
+              <div className="overflow-y-auto flex-1 p-2 space-y-2">
+                {laporan.map((l) => (
+                  <button key={l.id_laporan} onClick={() => setSelectedLaporan(l)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all ${selectedLaporan?.id_laporan === l.id_laporan ? 'bg-blue-50 border border-blue-100' : 'hover:bg-gray-50 border border-transparent'}`}>
+                    <p className="font-bold text-sm text-gray-900">{l.kode_laporan}</p>
+                    <p className="text-xs text-gray-500 mt-1 truncate">{l.alamat}</p>
                   </button>
                 ))}
               </div>
-              <textarea 
-                className="w-full p-3 border rounded-xl text-sm" 
-                placeholder="Tambahkan catatan khusus penolakan..."
-                value={alasanTolak}
-                onChange={(e) => setAlasanTolak(e.target.value)}
-              />
             </div>
-          )}
-
-          <button 
-            onClick={handleAction}
-            className="w-full mt-6 py-4 bg-blue-950 text-white rounded-2xl font-bold hover:bg-blue-900"
-          >
-            {tindakan === 'setujui' ? 'Konfirmasi Penugasan' : 'Konfirmasi Penolakan'}
-          </button>
+          </div>
+          <div className="lg:col-span-8">
+            {selectedLaporan && <DetailLaporanCard laporan={selectedLaporan} token={token} />}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 function StatCard({ title, value, icon }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border shadow-sm flex items-center justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
       <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <h3 className="text-3xl font-bold mt-1">{value}</h3>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{title}</p>
+        <h3 className="text-2xl font-black text-gray-900 mt-1">{value}</h3>
       </div>
-      <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl">{icon}</div>
+      <div className="text-blue-600 p-2 bg-blue-50 rounded-xl">{icon}</div>
     </div>
   );
 }
 
-/* =========================================================
-   LAYOUT & SIDEBAR
-========================================================= */
+function DetailLaporanCard({ laporan, token }) {
+  const [tindakan, setTindakan] = useState('setujui');
+  const [petugasList, setPetugasList] = useState([]);
+  const [petugas, setPetugas] = useState('');
+  const [alasanTolak, setAlasanTolak] = useState('');
 
-function LayoutAdmin({ children, previewUrl }) {
-  const navigate = useNavigate();
+  useEffect(() => {
+    axios.get('http://localhost:3000/api/admin/petugas?status=aktif', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => setPetugasList(res.data?.data?.data || []));
+  }, [token]);
+
+  const handleAction = async () => {
+    try {
+      if (tindakan === 'setujui') {
+        await axios.post(`http://localhost:3000/api/admin/laporan/${laporan.id_laporan}/tugaskan`, 
+          { id_petugas: petugas, tindakan_direkomendasikan: 'tindak_lanjut', catatan_tugas: 'Segera tangani', batas_waktu_penanganan: new Date().toISOString() }, 
+          { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await axios.put(`http://localhost:3000/api/admin/laporan/${laporan.id_laporan}/tolak`, { alasan_penolakan: alasanTolak }, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      alert("Aksi berhasil diproses!");
+      window.location.reload();
+    } catch (err) { alert("Gagal memproses aksi."); }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm">A</div>
-          <div>
-            <h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p>
-          </div>
+    <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+            <h3 className="text-3xl font-extrabold text-gray-900">{laporan.kode_laporan}</h3>
+            <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1 rounded-full">SLA Urgent</span>
         </div>
-        <button onClick={() => navigate('/internal/admin/profil')}>
-          <img
-            src={previewUrl}
-            alt="Admin"
-            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
-            onError={(e) => {
-              e.target.src = '/avatar-admin.jpg';
-            }}
-          />
-        </button>
-      </header>
-      <div className="flex flex-1">
-        <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          <div 
-            onClick={() => navigate('/internal/admin/profil')} 
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <img
-                src={previewUrl}
-                alt="Admin"
-                className="w-10 h-10 rounded-full object-cover border border-white/20"
-                onError={(e) => {
-                  e.target.src = '/avatar-admin.jpg';
-                }}
-              />
+        <p className="text-sm text-gray-400 font-medium">{new Date(laporan.created_at).toLocaleDateString('id-ID')}</p>
+      </div>
 
-              <div>
-                <h2 className="text-white font-bold text-sm">
-                  Administrator
-                </h2>
-                <p className="text-blue-300 text-xs">
-                  Dishub Kota
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard" onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk" active onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat" onClick={() => navigate('/internal/admin/penilaian')} />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas" onClick={() => navigate('/internal/admin/petugas')} />
-          </div>
-          <div className="p-4 border-t border-blue-900">
-            <button onClick={() => navigate('/')} className="w-full text-blue-300 hover:text-white text-sm py-2 transition">← Keluar</button>
-          </div>
-        </aside>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+      {laporan.foto_bukti && (
+        <img src={`http://localhost:3000/uploads/${laporan.foto_bukti}`} alt="Bukti" className="w-full h-72 object-cover rounded-2xl shadow-inner" />
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+           <h4 className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3"><MapPin size={14}/> Lokasi</h4>
+           <p className="text-sm font-medium bg-gray-50 p-4 rounded-xl text-gray-700">{laporan.alamat}</p>
+        </div>
+        <div>
+           <h4 className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3"><Tag size={14}/> Kategori</h4>
+           <p className="text-sm font-medium bg-blue-50 p-4 rounded-xl text-blue-900">{laporan.KategoriPelanggaran?.nama_kategori || 'Kategori tidak diketahui'}</p>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3"><AlignLeft size={14}/> Deskripsi</h4>
+        <p className="text-sm font-medium bg-gray-50 p-4 rounded-xl text-gray-700">{laporan.deskripsi}</p>
+      </div>
+
+      <div className="border-t pt-8">
+        <div className="flex gap-4 mb-6">
+          <button onClick={() => setTindakan('setujui')} className={`flex-1 py-4 rounded-2xl font-bold transition-all ${tindakan === 'setujui' ? 'bg-blue-950 text-white shadow-lg' : 'bg-gray-100 text-gray-600'}`}>Setujui & Tugaskan</button>
+          <button onClick={() => setTindakan('tolak')} className={`flex-1 py-4 rounded-2xl font-bold transition-all ${tindakan === 'tolak' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>Tolak Laporan</button>
+        </div>
+        
+        {tindakan === 'setujui' ? (
+           <select className="w-full p-4 border border-gray-200 rounded-2xl mb-4 text-sm font-medium" onChange={(e) => setPetugas(e.target.value)} value={petugas}>
+             <option value="">Pilih Petugas Lapangan...</option>
+             {petugasList.map(p => <option key={p.id_user} value={p.id_user}>{p.nama} ({p.unit})</option>)}
+           </select>
+        ) : (
+           <div>
+             <div className="grid grid-cols-2 gap-2 mb-3">
+               {['Foto Kurang Jelas', 'Bukan Pelanggaran', 'Laporan Duplikat'].map((alasan) => (
+                 <button key={alasan} type="button" onClick={() => setAlasanTolak(alasan)} className={`text-xs p-3 rounded-xl border ${alasanTolak === alasan ? 'bg-red-100 border-red-500' : 'border-gray-200'}`}>
+                   {alasan}
+                 </button>
+               ))}
+             </div>
+             <textarea className="w-full p-4 border border-gray-200 rounded-2xl mb-4 text-sm" placeholder="Atau ketik catatan khusus penolakan..." value={alasanTolak} onChange={(e) => setAlasanTolak(e.target.value)} />
+           </div>
+        )}
+
+        <button onClick={handleAction} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all">
+          {tindakan === 'setujui' ? 'Konfirmasi Penugasan' : 'Konfirmasi Penolakan'}
+        </button>
       </div>
     </div>
-  );
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button 
-      onClick={onClick} 
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-        active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'
-      }`}
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </button>
   );
 }

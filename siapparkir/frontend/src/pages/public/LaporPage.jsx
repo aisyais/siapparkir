@@ -183,7 +183,7 @@ export default function LaporPage() {
       <div className="flex flex-1">
 
         {/* SIDEBAR */}
-        <aside className="hidden md:flex w-52 bg-blue-950 flex-col py-6 px-4">
+        <aside className="hidden md:flex w-75 bg-blue-950 flex-col py-6 px-4">
 
           <div className="flex items-center gap-3 bg-blue-900 rounded-xl px-3 py-3 mb-6">
 
@@ -230,16 +230,15 @@ export default function LaporPage() {
 
           <button
             onClick={() => navigate('/')}
-            className="text-blue-300 text-sm py-2"
-          >
+            className="text-red-500 text-sm py-2 font-medium transition-all duration-300 hover:text-red-200 hover:translate-x-1 cursor-pointer"          >
             ← Keluar
           </button>
         </aside>
 
         {/* MAIN */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-2 p-6 md:p-8 overflow-y-auto">
 
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-7xl mx-auto">
 
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
               Formulir Laporan Kendaraan
@@ -309,41 +308,36 @@ export default function LaporPage() {
                 {/* STEP 0 */}
                 {step === 0 && (
                   <>
-                    <div className="bg-white rounded-2xl shadow-sm p-6">
-
-                      <h3 className="font-semibold text-gray-800 mb-4">
-                        Upload Foto Bukti
-                      </h3>
-
-                      <label className="block">
-
-                        <input
-                          type="file"
-                          name="foto_bukti"
-                          accept="image/*"
-                          onChange={handleChange}
-                          className="hidden"
+                    {/* Gunakan div bukan label untuk container utama jika ingin menaruh tombol di luar input */}
+                    {previewFoto ? (
+                      <div 
+                        // SELURUH DIV INI SEKARANG BISA DIKLIK
+                        onClick={() => setPreviewFoto(null)} 
+                        className="relative group rounded-xl overflow-hidden border-2 border-blue-200 w-full max-w-lg mx-auto shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
+                      >
+                        <img
+                          src={previewFoto}
+                          alt="preview"
+                          className="w-full h-auto block" 
                         />
-
-                        {previewFoto ? (
-                          <div className="rounded-xl overflow-hidden border-2 border-blue-200 cursor-pointer">
-                            <img
-                              src={previewFoto}
-                              alt="preview"
-                              className="w-full h-52 object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer">
+                        
+                        {/* Overlay "Hapus" yang muncul saat hover sebagai petunjuk visual */}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="bg-white/90 text-red-600 px-6 py-3 rounded-full font-bold text-sm shadow-xl flex items-center gap-2">
+                            Klik untuk Hapus
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <label htmlFor="fileInput" className="block cursor-pointer">
+                        {/* Area upload tetap sama */}
+                        <input type="file" name="foto_bukti" id="fileInput" accept="image/*" onChange={handleChange} className="hidden" />
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center max-w-sm mx-auto hover:border-blue-400 hover:bg-blue-50 transition">
                             <div className="text-4xl mb-3">📷</div>
-
-                            <p className="text-gray-600 text-sm font-medium">
-                              Klik untuk upload foto
-                            </p>
-                          </div>
-                        )}
+                            <p className="text-gray-700 font-semibold text-sm">Klik untuk upload foto</p>
+                        </div>
                       </label>
-                    </div>
+                    )}
 
                     <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
 
@@ -424,11 +418,15 @@ export default function LaporPage() {
                   <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
 
                     {previewFoto && (
-                      <img
-                        src={previewFoto}
-                        alt="preview"
-                        className="w-full h-56 object-cover rounded-xl"
-                      />
+                      <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                        <img
+                          src={previewFoto}
+                          alt="preview"
+                          // w-full untuk lebar penuh, h-auto untuk menjaga proporsi asli foto
+                          // object-contain memastikan foto tidak terpotong (terlihat keseluruhan)
+                          className="w-full h-auto max-h-[300px] object-contain block"
+                        />
+                      </div>
                     )}
 
                     <div>
@@ -468,8 +466,7 @@ export default function LaporPage() {
 
               {/* MAP */}
               {step < 2 && (
-                <div className="w-full lg:w-80 space-y-4">
-
+                <div className="w-full lg:w-100 space-y-4">
                   <div className="bg-white rounded-2xl shadow-sm p-5">
 
                     <div className="flex items-center justify-between mb-3">
@@ -514,14 +511,14 @@ export default function LaporPage() {
               {step > 0 ? (
                 <button
                   onClick={() => setStep(prev => prev - 1)}
-                  className="px-6 py-3 border border-gray-300 rounded-xl"
+                  className="px-6 py-3 border border-gray-300 rounded-xl transition-all duration-200 hover:shadow-md hover:border-gray-400 cursor-pointer"
                 >
                   ← Kembali
                 </button>
               ) : (
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 border border-gray-300 rounded-xl"
+                  className="px-6 py-3 border border-gray-300 rounded-xl transition-all duration-200 hover:shadow-md hover:border-gray-400 cursor-pointer"
                 >
                   Batal
                 </button>

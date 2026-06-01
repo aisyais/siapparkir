@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 
 import LandingPage       from '../pages/public/LandingPage'
 import LaporPage         from '../pages/public/LaporPage'
@@ -6,6 +6,8 @@ import CekStatusPage     from '../pages/public/CekStatusPage'
 import RiwayatPage       from '../pages/public/RiwayatPage'
 import DashboardPage     from '../pages/public/Dashboard'
 import LoginPage         from '../pages/internal/LoginPage'
+import AdminLayout from '../components/layout/AdminLayout';
+import PetugasLayout from '../components/layout/PetugasLayout';
 import AdminDashboard    from '../pages/internal/admin/AdminDashboard'
 import AdminLaporan      from '../pages/internal/admin/AdminLaporan'
 import AdminPetugas      from '../pages/internal/admin/AdminPetugas'
@@ -24,6 +26,18 @@ import SuksesPage        from '../pages/public/SuksesPage'
 import RiwayatPenindakan from '../pages/internal/petugas/RiwayatPenindakan'
 
 import DetailLaporanPage from '../pages/public/DetailLaporanPage'
+
+const AdminRouteWrapper = () => (
+  <AdminLayout>
+    <Outlet />
+  </AdminLayout>
+);
+
+const PetugasRouteWrapper = () => (
+  <PetugasLayout>
+    <Outlet />
+  </PetugasLayout>
+);
 
 export default function AppRouter() {
   return (
@@ -47,24 +61,28 @@ export default function AppRouter() {
 
         {/* Hak Akses: Admin */}
         <Route element={<PrivateRoute role="admin" />}>
-          <Route path="/internal/admin"         element={<AdminDashboard />} />
-          <Route path="/internal/admin/laporan" element={<AdminLaporan />} />
-          <Route path="/internal/admin/petugas" element={<AdminPetugas />} />
-          <Route path="/internal/admin/laporan_penindakan" element={<AdminLaporanPenindakan />} />
-          <Route path="/internal/admin/tambah_petugas" element={<TambahPetugas />} />
-          <Route path="/internal/admin/penilaian" element={<PenilaianMasyarakat />} />
-          <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
-          <Route path="/internal/admin/profil" element={<ProfilAdmin />} />
+          <Route element={<AdminRouteWrapper />}>
+            <Route path="/internal/admin"         element={<AdminDashboard />} />
+            <Route path="/internal/admin/laporan" element={<AdminLaporan />} />
+            <Route path="/internal/admin/petugas" element={<AdminPetugas />} />
+            <Route path="/internal/admin/laporan_penindakan" element={<AdminLaporanPenindakan />} />
+            <Route path="/internal/admin/tambah_petugas" element={<TambahPetugas />} />
+            <Route path="/internal/admin/penilaian" element={<PenilaianMasyarakat />} />
+            <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
+            <Route path="/internal/admin/profil" element={<ProfilAdmin />} />
+          </Route>
         </Route>
 
         {/* Hak Akses: Petugas */}
         <Route element={<PrivateRoute role="petugas" />}>
-          <Route path="/internal/petugas"       element={<PetugasDashboard />} />
-          <Route path="/internal/petugas/profil" element={<ProfilPetugas />} />
-          <Route path="/internal/petugas/laporan" element={<LaporanMasuk/>} />
-          <Route path="/internal/petugas/detail-penindakan/:id" element={<DetailPenindakan />} />
+          <Route element={<PetugasRouteWrapper />}>
+            <Route path="/internal/petugas"       element={<PetugasDashboard />} />
+            <Route path="/internal/petugas/profil" element={<ProfilPetugas />} />
+            <Route path="/internal/petugas/laporan" element={<LaporanMasuk/>} />
+            <Route path="/internal/petugas/detail-penindakan/:id" element={<DetailPenindakan />} />
+            <Route path="/internal/petugas/riwayat" element={<RiwayatPenindakan />} />
+          </Route>
           <Route path="/internal/petugas/selesai" element={<SelesaiPenindakan />} />
-          <Route path="/internal/petugas/riwayat" element={<RiwayatPenindakan />} />
         </Route>
 
         {/* Jika mengetik rute asal, kembalikan ke Landing Page awal */}
