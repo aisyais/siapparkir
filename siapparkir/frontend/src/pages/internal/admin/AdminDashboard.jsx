@@ -94,7 +94,12 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="p-6 border-b flex items-center justify-between">
             <h3 className="font-bold text-lg text-gray-800">Antrean Verifikasi Laporan</h3>
-            <button className="text-sm font-semibold text-blue-700 hover:text-blue-900">Lihat Semua →</button>
+            <button
+              onClick={() => navigate('/internal/admin/laporan')}
+              className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+            >
+              Lihat Semua →
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -109,7 +114,18 @@ export default function AdminDashboard() {
                     <td className="p-4 text-gray-600 truncate max-w-xs">{item.alamat}</td>
                     <td className="p-4 text-gray-600">{item.kategori?.nama_kategori || 'N/A'}</td>
                     <td className="p-4 text-right">
-                      <button onClick={() => navigate(`/internal/admin/laporan/${item.id_laporan}`)} className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-xl text-sm font-semibold transition">Proses</button>
+                      <button
+                        onClick={() =>
+                          navigate('/internal/admin/laporan', {
+                            state: {
+                              selectedId: item.id_laporan
+                            }
+                          })
+                        }
+                        className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2 rounded-xl text-sm font-semibold transition"
+                      >
+                        Proses
+                      </button>
                     </td>
                   </tr>
                 ))}

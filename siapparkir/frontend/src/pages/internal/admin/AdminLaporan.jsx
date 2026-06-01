@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
+import { useLocation } from 'react-router-dom';
 
 export default function AdminLaporan() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  const location = useLocation();
+  const selectedId = location.state?.selectedId;
   const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg');
   const [laporan, setLaporan] = useState([]);
   const [statistik, setStatistik] = useState({});
@@ -38,7 +41,18 @@ export default function AdminLaporan() {
     setLaporan(laporanData);
 
     if (laporanData.length > 0) {
-      setSelectedLaporan(laporanData[0]);
+      if (selectedId) {
+        const laporanDipilih = laporanData.find(
+          (l) => l.id_laporan === selectedId
+        );
+
+        setSelectedLaporan(
+          laporanDipilih || laporanData[0]
+        );
+      } else {
+        setSelectedLaporan(laporanData[0]);
+      }
+
     } else {
       setSelectedLaporan(null);
     }

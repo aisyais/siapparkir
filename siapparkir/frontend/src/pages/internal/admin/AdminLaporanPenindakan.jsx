@@ -1,116 +1,339 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import * as XLSX from 'xlsx';
-import useAuthStore from '../../../store/authStore';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import * as XLSX from 'xlsx'
+import useAuthStore from '../../../store/authStore'
 
 export default function AdminLaporanPenindakan() {
-  const navigate = useNavigate();
-  const token = useAuthStore((s) => s.token);
+  const navigate = useNavigate()
+  const token    = useAuthStore((s) => s.token)
 
-  const [laporan, setLaporan] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showExportModal, setShowExportModal] = useState(false);
+  const [laporan, setLaporan]             = useState([])
+  const [loading, setLoading]             = useState(true)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [total, setTotal]                 = useState(0)
 
+  // Filter state
+  const [search, setSearch]         = useState('')
+  const [idKategori, setIdKategori] = useState('')
+  const [idWilayah, setIdWilayah]   = useState('')
+  const [idPetugas, setIdPetugas]   = useState('')
+  const [rentang, setRentang]       = useState('semua')
+
+  // Dropdown data
+  const [kategoriList, setKategoriList] = useState([])
+  const [wilayahList, setWilayahList]   = useState([])
+  const [petugasList, setPetugasList]   = useState([])
+
+  // Statistik bawah
+  const [stats, setStats] = useState({
+    total_derek: 0,
+    estimasi_pnbp: 0,
+    petugas_aktif: 0,
+  })
+
+  // ============================================================
+  // Fetch dropdown data sekali saja
+  // ============================================================
   useEffect(() => {
-    const fetchAllLaporan = async () => {
+    const fetchDropdowns = async () => {
       try {
-        setLoading(true);
-        const res = await axios.get('http://localhost:3000/api/admin/laporan', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = res.data?.data || [];
-        setLaporan(Array.isArray(data) ? data : []);
+        const [resKategori, resWilayah, resPetugas] = await Promise.all([
+          axios.get('http://localhost:3000/api/kategori'),
+          axios.get('http://localhost:3000/api/admin/wilayah',
+            { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('http://localhost:3000/api/admin/petugas',
+            { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        setKategoriList(resKategori.data?.data || [])
+        setWilayahList(resWilayah.data?.data || [])
+        // petugas ada di dalam payload.data
+        const petugasPayload = resPetugas.data?.data || {}
+        setPetugasList(Array.isArray(petugasPayload.data) ? petugasPayload.data : [])
       } catch (err) {
-        console.error("Error API:", err);
-        setLaporan([]);
-      } finally {
-        setLoading(false);
+        console.error('Gagal memuat dropdown:', err)
       }
-    };
-    fetchAllLaporan();
-  }, [token]);
+    }
+    fetchDropdowns()
+  }, [token])
 
+  // ============================================================
+  // Fetch laporan penindakan dengan filter
+  // ============================================================
+  useEffect(() => {
+    const fetchLaporan = async () => {
+      try {
+        setLoading(true)
+
+        // Hitung tanggal berdasarkan rentang
+        let tanggal_dari = ''
+        const now = new Date()
+        if (rentang === 'hari_ini') {
+          tanggal_dari = now.toISOString().split('T')[0]
+        } else if (rentang === 'minggu_ini') {
+          const tujuhHariLalu = new Date(now)
+          tujuhHariLalu.setDate(now.getDate() - 7)
+          tanggal_dari = tujuhHariLalu.toISOString().split('T')[0]
+        } else if (rentang === 'bulan_ini') {
+          tanggal_dari = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+        }
+
+        const params = new URLSearchParams()
+        // Tampilkan yang sudah ditindak atau selesai
+        // Kita fetch semua lalu filter, atau bisa juga tidak filter status
+        // agar admin bisa lihat semua
+        if (search)      params.append('search',      search)
+        if (idKategori)  params.append('id_kategori', idKategori)
+        if (tanggal_dari) params.append('tanggal_dari', tanggal_dari)
+        params.append('limit', '100')
+
+        const res = await axios.get(
+          `http://localhost:3000/api/admin/laporan?${params.toString()}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+
+        // ✅ Fix parsing: res.data.data = { data: [...], total, page }
+        const payload    = res.data?.data || {}
+        const allData    = Array.isArray(payload.data) ? payload.data : []
+
+        // Filter status ditindak/selesai di client
+        // dan filter petugas jika dipilih
+        const filtered = allData.filter((item) => {
+          const statusOk   = ['ditindak', 'selesai', 'tidak_ditemukan'].includes(item.status_laporan)
+          const petugasOk  = idPetugas
+            ? item.petugas?.id_user === parseInt(idPetugas)
+            : true
+          return statusOk && petugasOk
+        })
+
+        setLaporan(filtered)
+        setTotal(filtered.length)
+
+        // Hitung statistik
+        const derekCount = filtered.filter(
+          (l) => l.tindakan?.[0]?.jenis_tindakan === 'derek'
+        ).length
+        setStats({
+          total_derek:    derekCount,
+          estimasi_pnbp:  derekCount * 250000,
+          petugas_aktif:  [...new Set(filtered.map(l => l.petugas?.id_user).filter(Boolean))].length,
+        })
+
+      } catch (err) {
+        console.error('Gagal memuat laporan:', err)
+        setLaporan([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLaporan()
+  }, [token, search, idKategori, idWilayah, idPetugas, rentang])
+
+  // ============================================================
+  // Export Excel
+  // ============================================================
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(laporan);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "LaporanPenindakan");
-    XLSX.writeFile(workbook, "Data_Laporan_Penindakan.xlsx");
-    setShowExportModal(false);
-  };
+    const rows = laporan.map((item) => ({
+      'Report ID':    item.kode_laporan,
+      'Tanggal':      new Date(item.created_at).toLocaleString('id-ID'),
+      'Petugas':      item.petugas?.nama || '-',
+      'Plat Nomor':   item.nomor_plat,
+      'Pelanggaran':  item.kategori?.nama_kategori || '-',
+      'Tindakan':     item.tindakan?.[0]?.jenis_tindakan || '-',
+      'Status':       item.status_laporan,
+      'Lokasi':       item.alamat,
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Penindakan')
+    XLSX.writeFile(wb, `Laporan_Penindakan_${new Date().toLocaleDateString('id-ID')}.xlsx`)
+    setShowExportModal(false)
+  }
 
   const handleExportPDF = () => {
-    const dataToExport = laporan.map(item => ({
-        id: item.kode_laporan,
-        waktu: new Date(item.created_at).toLocaleString('id-ID'),
-        nopol: item.nomor_plat,
-        kategori: item.kategori?.nama_kategori || '-',
-        kecamatan: item.kecamatan || '-',
-        tindakan: item.tindakan,
-        petugas: item.petugas?.nama || '-',
-        status: 'Selesai'
-    }));
+    const dataToExport = laporan.map((item) => ({
+      id:       item.kode_laporan,
+      waktu:    new Date(item.created_at).toLocaleString('id-ID'),
+      nopol:    item.nomor_plat,
+      kategori: item.kategori?.nama_kategori || '-',
+      tindakan: item.tindakan?.[0]?.jenis_tindakan?.toUpperCase() || '-',
+      petugas:  item.petugas?.nama || '-',
+      status:   item.status_laporan,
+    }))
+    localStorage.setItem('data_ekspor_dishub', JSON.stringify(dataToExport))
+    window.open('/internal/admin/preview-laporan', '_blank')
+    setShowExportModal(false)
+  }
 
-    localStorage.setItem('data_ekspor_dishub', JSON.stringify(dataToExport));
-    window.open('/internal/admin/preview-laporan', '_blank');
-    setShowExportModal(false);
-  };
+  const TINDAKAN_STYLE = {
+    derek:           'bg-red-100 text-red-700',
+    gembok:          'bg-orange-100 text-orange-700',
+    teguran:         'bg-gray-100 text-gray-600',
+    pindah:          'bg-blue-100 text-blue-700',
+    tidak_ditemukan: 'bg-purple-100 text-purple-700',
+  }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Memuat data...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <p className="text-gray-400">⏳ Memuat data laporan...</p>
+    </div>
+  )
 
   return (
     <LayoutAdmin>
-      {/* MODAL EKSPOR GABUNGAN */}
+
+      {/* MODAL EKSPOR */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl">
+          <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl">
             <div className="text-5xl mb-4">📥</div>
-            <h2 className="font-bold text-xl mb-2">Export Selesai!</h2>
-            <p className="text-sm text-gray-500 mb-6">Dokumen rekapitulasi siap untuk diproses lebih lanjut.</p>
-            
+            <h2 className="font-bold text-xl mb-2">Export Data</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {total} laporan siap diekspor
+            </p>
             <div className="flex flex-col gap-3">
-                <button onClick={exportToExcel} className="bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition">Download Excel (.xlsx)</button>
-                <button onClick={handleExportPDF} className="bg-blue-950 text-white py-3 rounded-xl font-bold hover:bg-black transition">Download PDF (.pdf)</button>
-                <button onClick={() => alert("Fitur Kirim Email Segera Hadir!")} className="bg-sky-200 text-sky-800 py-3 rounded-xl font-bold hover:bg-sky-300 transition flex items-center justify-center gap-2"><span>📧</span> Send to Email</button>
-                <button onClick={() => setShowExportModal(false)} className="bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 transition">← Back to Reports</button>
+              <button
+                onClick={exportToExcel}
+                className="bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition"
+              >
+                📊 Download Excel (.xlsx)
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="bg-blue-950 text-white py-3 rounded-xl font-bold hover:bg-blue-900 transition"
+              >
+                📄 Preview & Cetak PDF
+              </button>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
+              >
+                Batal
+              </button>
             </div>
-            </div>
+          </div>
         </div>
       )}
 
       <div className="space-y-6">
+
+        {/* HEADER */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-black text-gray-900">Laporan Penindakan</h1>
-            <p className="text-gray-500 mt-2">Manajemen database laporan dan aksi penegakan hukum.</p>
+            <h1 className="text-3xl font-black text-gray-900">Laporan Penindakan</h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              Manajemen database laporan dan aksi penegakan hukum.
+            </p>
           </div>
-          <button onClick={() => setShowExportModal(true)} className="bg-blue-950 hover:bg-blue-900 text-white px-6 py-3 rounded-xl font-bold text-sm transition shadow-sm">📤 Ekspor Data</button>
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="bg-blue-950 hover:bg-blue-900 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow-sm"
+          >
+            📤 Ekspor Data
+          </button>
         </div>
 
-        {/* FILTER LENGKAP */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-6 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-5">
-          <div>  <label className="text-sm font-semibold text-gray-600 mb-2 block">    Cari Laporan  </label>  <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input 
-                type="text" 
-                placeholder="No. Plat atau ID" 
-                className="w-full border border-gray-300 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition" 
-                /> </div>
+        {/* FILTER */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+
+          {/* Cari */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Cari Laporan
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="No. Plat atau ID"
+                className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition"
+              />
+            </div>
           </div>
-          <div><label className="text-sm font-semibold text-gray-600 mb-2 block">Rentang Waktu</label>
-            <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"><option>Harian (Hari Ini)</option></select></div>
-          <div><label className="text-sm font-semibold text-gray-600 mb-2 block">Jenis Pelanggaran</label>
-            <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"><option>Semua Pelanggaran</option></select></div>
-          <div><label className="text-sm font-semibold text-gray-600 mb-2 block">Wilayah Kota</label>
-            <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"><option>Seluruh Wilayah</option></select></div>
-          <div><label className="text-sm font-semibold text-gray-600 mb-2 block">Petugas</label>
-            <select className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm"><option>Semua Petugas</option></select></div>
+
+          {/* Rentang Waktu */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Rentang Waktu
+            </label>
+            <select
+              value={rentang}
+              onChange={(e) => setRentang(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="semua">Semua Waktu</option>
+              <option value="hari_ini">Harian (Hari Ini)</option>
+              <option value="minggu_ini">Minggu Ini</option>
+              <option value="bulan_ini">Bulan Ini</option>
+            </select>
+          </div>
+
+          {/* Jenis Pelanggaran */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Jenis Pelanggaran
+            </label>
+            <select
+              value={idKategori}
+              onChange={(e) => setIdKategori(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Semua Pelanggaran</option>
+              {kategoriList.map((k) => (
+                <option key={k.id_kategori} value={k.id_kategori}>
+                  {k.nama_kategori}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Wilayah */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Wilayah Kota
+            </label>
+            <select
+              value={idWilayah}
+              onChange={(e) => setIdWilayah(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Seluruh Wilayah</option>
+              {wilayahList.map((w) => (
+                <option key={w.id_wilayah} value={w.id_wilayah}>
+                  {w.nama_wilayah}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Petugas */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              Petugas
+            </label>
+            <select
+              value={idPetugas}
+              onChange={(e) => setIdPetugas(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Semua Petugas</option>
+              {petugasList.map((p) => (
+                <option key={p.id_user} value={p.id_user}>
+                  {p.nama}
+                </option>
+              ))}
+            </select>
+          </div>
+
         </div>
 
-        {/* TABLE DENGAN KOLOM PETUGAS */}
-        <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        {/* TABLE */}
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase">
               <tr>
                 <th className="px-6 py-4 text-left">Report ID</th>
                 <th className="px-6 py-4 text-left">Tanggal</th>
@@ -122,84 +345,213 @@ export default function AdminLaporanPenindakan() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {laporan.map((item) => (
-                <tr key={item.id_laporan} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-bold text-blue-900">#{item.kode_laporan}</td>
-                  <td className="px-6 py-4">{new Date(item.created_at).toLocaleDateString('id-ID')}</td>
-                  <td className="px-6 py-4 font-medium">{item.petugas?.nama || 'N/A'}</td>
-                  <td className="px-6 py-4"><span className="bg-black text-white px-2 py-1 rounded text-[10px] font-bold">{item.nomor_plat}</span></td>
-                  <td className="px-6 py-4">{item.kategori?.nama_kategori || '-'}</td>
-                  <td className="px-6 py-4"><span className="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-bold uppercase">{item.tindakan}</span></td>
-                  <td className="px-6 py-4 text-center"><button onClick={() => navigate(`/internal/admin/laporan/${item.id_laporan}`)} className="text-xl">👁️</button></td>
+              {laporan.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-16 text-gray-400">
+                    <div className="text-4xl mb-3">📋</div>
+                    <p className="font-medium text-gray-500">
+                      Belum ada laporan yang ditindak
+                    </p>
+                    <p className="text-xs mt-1">
+                      Laporan akan muncul setelah petugas menyelesaikan penugasan
+                    </p>
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                laporan.map((item) => (
+                  <tr key={item.id_laporan} className="hover:bg-gray-50 transition">
+
+                    {/* Report ID */}
+                    <td className="px-6 py-4 font-bold text-blue-900">
+                      #{item.kode_laporan}
+                    </td>
+
+                    {/* Tanggal */}
+                    <td className="px-6 py-4 text-gray-600 text-xs">
+                      {new Date(item.created_at).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                      })}
+                      <br />
+                      <span className="text-gray-400">
+                        {new Date(item.created_at).toLocaleTimeString('id-ID', {
+                          hour: '2-digit', minute: '2-digit'
+                        })}
+                      </span>
+                    </td>
+
+                    {/* Petugas */}
+                    <td className="px-6 py-4 font-medium text-gray-700">
+                      {item.petugas?.nama || (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+
+                    {/* Plat Nomor */}
+                    <td className="px-6 py-4">
+                      <span className="bg-gray-900 text-white px-2 py-1 rounded text-[11px] font-bold font-mono">
+                        {item.nomor_plat}
+                      </span>
+                    </td>
+
+                    {/* Pelanggaran */}
+                    <td className="px-6 py-4 text-gray-600">
+                      {item.kategori?.nama_kategori || '-'}
+                    </td>
+
+                    {/* Tindakan */}
+                    <td className="px-6 py-4">
+                      {item.tindakan?.[0]?.jenis_tindakan ? (
+                        <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase ${
+                          TINDAKAN_STYLE[item.tindakan[0].jenis_tindakan] || 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {item.tindakan[0].jenis_tindakan.replace('_', ' ')}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">-</span>
+                      )}
+                    </td>
+
+                    {/* Aksi */}
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => navigate(`/internal/admin/laporan/${item.id_laporan}`)}
+                        className="text-xl hover:opacity-70 transition"
+                        title="Lihat Detail"
+                      >
+                        👁️
+                      </button>
+                    </td>
+
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+
+          {/* FOOTER TABLE */}
+          {laporan.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-100 text-xs text-gray-400">
+              Menampilkan {laporan.length} laporan
+            </div>
+          )}
         </div>
+
+        {/* STATISTIK BAWAH */}
+        {laporan.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatBawah
+              icon="🚗"
+              label="Total Derek Bulan Ini"
+              value={`${stats.total_derek} Kendaraan`}
+            />
+            <StatBawah
+              icon="💰"
+              label="Estimasi PNBP"
+              value={`Rp ${stats.estimasi_pnbp.toLocaleString('id-ID')}`}
+            />
+            <StatBawah
+              icon="👮"
+              label="Petugas Aktif"
+              value={`${stats.petugas_aktif} Personel`}
+            />
+          </div>
+        )}
+
       </div>
     </LayoutAdmin>
-  );
+  )
 }
 
-/* =========================================================
-   LAYOUT ADMIN (DIPERBARUI DENGAN PROFIL)
-========================================================= */
+// ============================================================
+// KOMPONEN PENDUKUNG
+// ============================================================
+
+function StatBawah({ icon, label, value }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-gray-400 font-medium">{label}</p>
+        <p className="text-lg font-bold text-gray-900 mt-0.5">{value}</p>
+      </div>
+    </div>
+  )
+}
 
 function LayoutAdmin({ children }) {
-  const navigate = useNavigate();
-
+  const navigate = useNavigate()
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm">A</div>
-          <div><h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1><p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p></div>
+          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center">
+            <span className="text-white font-black text-sm">A</span>
+          </div>
+          <div>
+            <h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p>
+          </div>
         </div>
-        
-        {/* PROFIL DI HEADER */}
         <button onClick={() => navigate('/internal/admin/profil')}>
-           <img src="/path-to-admin-photo.jpg" alt="Admin" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+          <img
+            src="/path-to-admin-photo.jpg"
+            alt="Admin"
+            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+          />
         </button>
       </header>
-
       <div className="flex flex-1">
         <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
-          {/* PROFIL DI SIDEBAR */}
-          <div 
-            onClick={() => navigate('/internal/admin/profil')} 
+          <div
+            onClick={() => navigate('/internal/admin/profil')}
             className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
           >
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">🛡️</div>
-                <div>
+              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">
+                🛡️
+              </div>
+              <div>
                 <h2 className="text-white font-bold text-sm">Administrator</h2>
                 <p className="text-blue-300 text-xs">Dishub Kota</p>
-                </div>
+              </div>
             </div>
           </div>
-
           <div className="space-y-1 flex-1 p-4">
-            <SidebarItem icon="📊" label="Dashboard" onClick={() => navigate('/internal/admin')} />
-            <SidebarItem icon="📋" label="Laporan Masuk" active onClick={() => navigate('/internal/admin/laporan')} />
-            <SidebarItem icon="📈" label="Penilaian Masyarakat" onClick={() => navigate('/internal/admin/penilaian')} />
-            <SidebarItem icon="⚙️" label="Manajemen Petugas" onClick={() => navigate('/internal/admin/petugas')} />
+            <SidebarItem icon="📊" label="Dashboard"
+              onClick={() => navigate('/internal/admin')} />
+            <SidebarItem icon="📋" label="Laporan Masuk" active
+              onClick={() => navigate('/internal/admin/laporan')} />
+            <SidebarItem icon="📈" label="Penilaian Masyarakat"
+              onClick={() => navigate('/internal/admin/penilaian')} />
+            <SidebarItem icon="⚙️" label="Manajemen Petugas"
+              onClick={() => navigate('/internal/admin/petugas')} />
           </div>
-
           <div className="p-4 border-t border-blue-900">
-            <button onClick={() => navigate('/')} className="w-full text-blue-300 hover:text-white text-sm py-2 transition">← Keluar</button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full text-blue-300 hover:text-white text-sm py-2 transition"
+            >
+              ← Keluar
+            </button>
           </div>
         </aside>
-
         <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
-  );
+  )
 }
 
 function SidebarItem({ icon, label, onClick, active }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'}`}>
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+        active ? 'bg-blue-800 text-white' : 'text-blue-300 hover:bg-blue-900 hover:text-white'
+      }`}
+    >
       <span>{icon}</span><span>{label}</span>
     </button>
-  );
+  )
 }

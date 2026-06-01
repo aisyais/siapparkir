@@ -246,16 +246,63 @@ export default function DetailLaporanPage() {
 
                 </div>
 
-                {/* STATUS */}
-                <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
 
-                  <h3 className="font-bold text-gray-800 mb-6">
-                    Status Penanganan
-                  </h3>
+  <h3 className="font-bold text-gray-800 mb-6">
+    Status Penanganan
+  </h3>
 
-                  <Timeline status={data.status_laporan} />
+  <Timeline status={data.status_laporan} />
 
-                </div>
+  {/* FOTO HASIL PENINDAKAN */}
+  {data.tindakan &&
+    data.tindakan.length > 0 &&
+    data.tindakan[0].foto_tindakan && (
+      <div className="mt-8 pt-6 border-t">
+
+        <h4 className="font-bold text-gray-800 mb-4">
+          📸 Bukti Penindakan Petugas
+        </h4>
+
+       <img
+  src={`http://localhost:3000/uploads/${data.tindakan[0].foto_tindakan}`}
+  alt="Bukti Penindakan"
+  className="w-64 h-40 object-cover rounded-2xl border shadow-sm"
+/>
+
+        <div className="mt-4 bg-gray-50 p-4 rounded-xl">
+
+          <p className="text-sm">
+            <span className="font-semibold">
+              Jenis Tindakan:
+            </span>{' '}
+            {data.tindakan[0].jenis_tindakan}
+          </p>
+
+          {data.tindakan[0].catatan_tindakan && (
+            <p className="text-sm mt-2">
+              <span className="font-semibold">
+                Catatan Petugas:
+              </span>{' '}
+              {data.tindakan[0].catatan_tindakan}
+            </p>
+          )}
+
+          {data.tindakan[0].waktu_selesai && (
+            <p className="text-sm mt-2">
+              <span className="font-semibold">
+                Waktu Selesai:
+              </span>{' '}
+              {formatTanggal(data.tindakan[0].waktu_selesai)}
+            </p>
+          )}
+
+        </div>
+
+      </div>
+    )}
+
+</div>
 
               </div>
 
