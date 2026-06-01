@@ -6,7 +6,7 @@ import useAuthStore from '../../../store/authStore';
 export default function AdminLaporan() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
-
+  const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg');
   const [laporan, setLaporan] = useState([]);
   const [statistik, setStatistik] = useState({});
   const [loading, setLoading] = useState(true);
@@ -55,6 +55,20 @@ export default function AdminLaporan() {
     setStatistik(
       statsRes.data?.data?.statistik || {}
     );
+    const profilRes = await axios.get(
+      'http://localhost:3000/api/admin/profil',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (profilRes.data?.data?.foto_profil) {
+      setPreviewUrl(
+        `http://localhost:3000/uploads/${profilRes.data.data.foto_profil}`
+      );
+    }
   } catch (err) {
     console.error(
       'Gagal fetch data:',
@@ -70,7 +84,7 @@ export default function AdminLaporan() {
   fetchData();
 }, [token, fetchData]);
   return (
-    <LayoutAdmin>
+    <LayoutAdmin previewUrl={previewUrl}>
       {loading ? (
         <div className="bg-white p-10 rounded-2xl border text-center">
           Memuat data...
@@ -430,7 +444,7 @@ function StatCard({ title, value, icon }) {
    LAYOUT & SIDEBAR
 ========================================================= */
 
-function LayoutAdmin({ children }) {
+function LayoutAdmin({ children, previewUrl }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -443,7 +457,14 @@ function LayoutAdmin({ children }) {
           </div>
         </div>
         <button onClick={() => navigate('/internal/admin/profil')}>
-          <img src="/path-to-admin-photo.jpg" alt="Admin" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+          <img
+            src={previewUrl}
+            alt="Admin"
+            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-admin.jpg';
+            }}
+          />
         </button>
       </header>
       <div className="flex flex-1">
@@ -453,10 +474,22 @@ function LayoutAdmin({ children }) {
             className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">🛡️</div>
+              <img
+                src={previewUrl}
+                alt="Admin"
+                className="w-10 h-10 rounded-full object-cover border border-white/20"
+                onError={(e) => {
+                  e.target.src = '/avatar-admin.jpg';
+                }}
+              />
+
               <div>
-                <h2 className="text-white font-bold text-sm">Administrator</h2>
-                <p className="text-blue-300 text-xs">Dishub Kota</p>
+                <h2 className="text-white font-bold text-sm">
+                  Administrator
+                </h2>
+                <p className="text-blue-300 text-xs">
+                  Dishub Kota
+                </p>
               </div>
             </div>
           </div>

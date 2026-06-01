@@ -15,13 +15,40 @@ import useAuthStore from '../../../store/authStore';
 
 export default function PetugasDashboard() {
   const navigate = useNavigate();
+  const [fotoProfil, setFotoProfil] = useState('/avatar-petugas.jpg');
   const token = useAuthStore((s) => s.token);
   const [laporan, setLaporan] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLaporan();
-  }, []);
+    if (token) {
+      fetchLaporan();
+      fetchProfil();
+    }
+  }, [token]);
+
+  const fetchProfil = async () => {
+    try {
+      const res = await axios.get(
+        'http://localhost:3000/api/petugas/profil',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const user = res.data.data;
+
+      if (user?.foto_profil) {
+        setFotoProfil(
+          `http://localhost:3000/uploads/${user.foto_profil}`
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Di PetugasDashboard.jsx, ubah bagian fetchLaporan:
   const fetchLaporan = async () => {
@@ -61,7 +88,14 @@ export default function PetugasDashboard() {
           </div>
         </div>
         <button onClick={() => navigate('/internal/petugas/profil')}>
-           <img src="/avatar-petugas.jpg" alt="Petugas" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+          <img
+            src={fotoProfil}
+            alt="Petugas"
+            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-petugas.jpg';
+            }}
+          />
         </button>
       </header>
 

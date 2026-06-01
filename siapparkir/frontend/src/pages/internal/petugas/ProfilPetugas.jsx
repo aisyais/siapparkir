@@ -24,9 +24,10 @@ export default function ProfilPetugas() {
         const res = await axios.get('http://localhost:3000/api/petugas/profil', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log("DATA PROFIL:", res.data);
         const data = res.data.data;
         setFormData(data);
-        if (data.foto) setPreviewUrl(`http://localhost:3000/uploads/${data.foto}`);
+        if (data.foto_profil) setPreviewUrl(`http://localhost:3000/uploads/${data.foto_profil}`);
       } catch (err) {
         console.error("Gagal mengambil data profil:", err);
       }
@@ -50,11 +51,11 @@ export default function ProfilPetugas() {
     const data = new FormData();
     data.append('nama', formData.nama);
     data.append('email', formData.email);
-    data.append('telepon', formData.telepon);
+    data.append('no_hp', formData.no_hp);
     data.append('status_petugas', formData.status_petugas); // Pastikan ini terkirim
     
     if (formData.password) data.append('password', formData.password);
-    if (selectedFile) data.append('foto', selectedFile);
+    if (selectedFile) data.append('foto_profil', selectedFile);
 
     try {
       await axios.put('http://localhost:3000/api/petugas/profil/update', data, {
@@ -96,9 +97,12 @@ export default function ProfilPetugas() {
         </div>
         <button onClick={() => navigate('/internal/petugas/profil')}>
           <img
-            src="/avatar-petugas.jpg"
+            src={previewUrl}
             alt="Petugas"
             className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-petugas.jpg';
+            }}
           />
         </button>
       </header>

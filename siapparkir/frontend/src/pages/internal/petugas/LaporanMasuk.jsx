@@ -11,6 +11,7 @@ export default function LaporanMasuk() {
   const navigate = useNavigate()
   const token    = useAuthStore((s) => s.token)
 
+  const [fotoProfil, setFotoProfil] = useState('/avatar-petugas.jpg')
   const [laporan, setLaporan]               = useState([])
   const [filteredLaporan, setFilteredLaporan] = useState([])
   const [search, setSearch]                 = useState('')
@@ -31,6 +32,12 @@ export default function LaporanMasuk() {
         )
 
         const payload   = res.data?.data || {}
+        if (payload.profil?.foto_profil) {
+          setFotoProfil(
+            `http://localhost:3000/uploads/${payload.profil.foto_profil}`
+          )
+        }
+
         const dataArray = Array.isArray(payload.data) ? payload.data : []
 
         setLaporan(dataArray)
@@ -47,6 +54,30 @@ export default function LaporanMasuk() {
       }
     }
 
+    const fetchProfil = async () => {
+      try {
+        const res = await axios.get(
+          'http://localhost:3000/api/petugas/profil',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        const profil = res.data?.data
+
+        if (profil?.foto_profil) {
+          setFotoProfil(
+            `http://localhost:3000/uploads/${profil.foto_profil}`
+          )
+        }
+      } catch (err) {
+        console.error('Gagal mengambil profil:', err)
+      }
+    }
+
+    fetchProfil()
     fetchData()
   }, [token])
 
@@ -102,9 +133,12 @@ export default function LaporanMasuk() {
         </div>
         <button onClick={() => navigate('/internal/petugas/profil')}>
           <img
-            src="/avatar-petugas.jpg"
+            src={fotoProfil}
             alt="Petugas"
             className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-petugas.jpg';
+            }}
           />
         </button>
       </header>
@@ -127,21 +161,8 @@ export default function LaporanMasuk() {
               </div>
             </button>
             <nav className="space-y-1.5">
-              <SidebarItem
-                icon={<LayoutDashboard size={16}/>}
-                label="Dashboard"
-                onClick={() => navigate('/internal/petugas')}
-              />
-              <SidebarItem
-                icon={<ClipboardList size={16}/>}
-                label="Laporan Masuk"
-                active
-              />
-              <SidebarItem
-                icon={<Users size={16}/>}
-                label="Petugas Lapangan"
-                onClick={() => navigate('/internal/petugas/tugas')}
-              />
+              <SidebarItem icon={<LayoutDashboard size={16}/>} label="Daftar Tugas" onClick={() => navigate('/internal/petugas')} />
+              <SidebarItem icon={<ClipboardList size={16}/>} label="Laporan Masuk" active onClick={() => navigate('/internal/petugas/laporan')} />              
             </nav>
           </div>
           <div className="pt-6 border-t border-white/10">

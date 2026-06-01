@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,6 +23,20 @@ export default function AdminDashboard() {
           headers: { Authorization: `Bearer ${token}` }
         });
         setData(response.data.data);
+        const profil = await axios.get(
+          'http://localhost:3000/api/admin/profil',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        if (profil.data.data.foto_profil) {
+          setPreviewUrl(
+            `http://localhost:3000/uploads/${profil.data.data.foto_profil}`
+          );
+        }
       } catch (err) {
         if (err.response?.status === 401 || err.response?.status === 403) {
           window.location.href = '/login';
@@ -41,7 +56,7 @@ export default function AdminDashboard() {
   const { statistik, antrean_verifikasi } = data;
 
   return (
-    <LayoutAdmin>
+    <LayoutAdmin previewUrl={previewUrl}>
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Manajemen Sistem</h1>
@@ -108,7 +123,7 @@ export default function AdminDashboard() {
 }
 
 // LAYOUT COMPONENT
-function LayoutAdmin({ children }) {
+function LayoutAdmin({ children, previewUrl }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -118,14 +133,28 @@ function LayoutAdmin({ children }) {
           <div><h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1><p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p></div>
         </div>
         <button onClick={() => navigate('/internal/admin/profil')}>
-           <img src="/path-to-admin-photo.jpg" alt="Admin" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+          <img
+            src={previewUrl}
+            alt="Admin"
+            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-admin.jpg';
+            }}
+          />
         </button>
       </header>
       <div className="flex flex-1">
         <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
           <div onClick={() => navigate('/internal/admin/profil')} className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">🛡️</div>
+              <img
+                src={previewUrl}
+                alt="Admin"
+                className="w-10 h-10 rounded-full object-cover border border-white/20"
+                onError={(e) => {
+                  e.target.src = '/avatar-admin.jpg';
+                }}
+              />
               <div><h2 className="text-white font-bold text-sm">Administrator</h2><p className="text-blue-300 text-xs">Dishub Kota</p></div>
             </div>
           </div>

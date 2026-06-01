@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
@@ -6,12 +6,13 @@ import useAuthStore from '../../../store/authStore';
 export default function ManajemenPetugas() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  console.log("TOKEN:", token);
 
   const [petugasList, setPetugasList] = useState([]);
   const [filteredPetugas, setFilteredPetugas] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const [previewUrl, setPreviewUrl] = useState('/avatar-admin.jpg');
   // Statistik (Tetap dipertahankan)
   const [statistik, setStatistik] = useState({
     total: 0,
@@ -20,9 +21,36 @@ export default function ManajemenPetugas() {
     tersedia: 0,
   });
 
+  const fetchProfil = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        'http://localhost:3000/api/admin/profil',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = res.data.data;
+
+      if (data?.foto_profil) {
+        setPreviewUrl(
+          `http://localhost:3000/uploads/${data.foto_profil}`
+        );
+      }
+    } catch (err) {
+      console.error('Gagal mengambil profil:', err);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchPetugas();
-  }, []);
+
+    if (token) {
+      fetchProfil();
+    }
+  }, [token, fetchProfil]);
 
   const fetchPetugas = async () => {
     try {
@@ -62,7 +90,7 @@ export default function ManajemenPetugas() {
   }, [search, petugasList]);
 
   return (
-    <LayoutAdmin>
+    <LayoutAdmin previewUrl={previewUrl}>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
         Manajemen Petugas Lapangan
       </h2>
@@ -149,7 +177,7 @@ export default function ManajemenPetugas() {
    LAYOUT ADMIN (Sesuai permintaan Anda)
 ========================================================= */
 
-function LayoutAdmin({ children }) {
+function LayoutAdmin({ children, previewUrl }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -159,14 +187,28 @@ function LayoutAdmin({ children }) {
           <div><h1 className="font-bold text-gray-800 leading-none">Admin Dishub</h1><p className="text-xs text-gray-400 mt-0.5">Sistem Verifikasi Laporan</p></div>
         </div>
         <button onClick={() => navigate('/internal/admin/profil')}>
-           <img src="/path-to-admin-photo.jpg" alt="Admin" className="w-10 h-10 rounded-full border border-gray-200 object-cover" />
+          <img
+            src={previewUrl}
+            alt="Admin"
+            className="w-10 h-10 rounded-full border border-gray-200 object-cover"
+            onError={(e) => {
+              e.target.src = '/avatar-admin.jpg';
+            }}
+          />
         </button>
       </header>
       <div className="flex flex-1">
         <aside className="hidden md:flex w-64 bg-blue-950 flex-col">
           <div onClick={() => navigate('/internal/admin/profil')} className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-700 rounded-xl flex items-center justify-center text-white text-lg">🛡️</div>
+              <img
+                src={previewUrl}
+                alt="Admin"
+                className="w-10 h-10 rounded-full object-cover border border-white/20"
+                onError={(e) => {
+                  e.target.src = '/avatar-admin.jpg';
+                }}
+              />
               <div><h2 className="text-white font-bold text-sm">Administrator</h2><p className="text-blue-300 text-xs">Dishub Kota</p></div>
             </div>
           </div>
