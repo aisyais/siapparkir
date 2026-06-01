@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
+import Swal from 'sweetalert2';
 
 export default function ProfilPetugas() {
   const navigate = useNavigate();
@@ -18,20 +19,74 @@ export default function ProfilPetugas() {
   const [previewUrl, setPreviewUrl] = useState('/avatar-petugas.jpg');
 
   useEffect(() => {
+    let isMounted = true;
     const fetchProfil = async () => {
       try {
         const res = await axios.get('http://localhost:3000/api/petugas/profil', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const data = res.data.data;
-        setFormData(data);
-        if (data.foto_profil) setPreviewUrl(`http://localhost:3000/uploads/${data.foto_profil}`);
+        
+        if (isMounted) {
+          const data = res.data.data;
+          setFormData(data);
+          if (data.foto_profil) {
+            setPreviewUrl(`http://localhost:3000/uploads/${data.foto_profil}`);
+          }
+        }
       } catch (err) {
         console.error("Gagal mengambil data profil:", err);
       }
     };
+
     if (token) fetchProfil();
+    return () => { isMounted = false; };
   }, [token]);
+
+  const handleSave = async () => {
+    // 1. Loading State yang cantik
+    Swal.fire({
+      title: 'Menyimpan Perubahan...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const data = new FormData();
+    data.append('nama', formData.nama || '');
+    data.append('email', formData.email || '');
+    data.append('no_hp', formData.no_hp || '');
+    data.append('status_petugas', formData.status_petugas || '');
+    if (formData.password) data.append('password', formData.password);
+    if (selectedFile) data.append('foto_profil', selectedFile);
+
+    try {
+      const res = await axios.put('http://localhost:3000/api/petugas/profil/update', data, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // 2. Sukses tanpa reload
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Profil Anda telah diperbarui.',
+        confirmButtonColor: '#001A57',
+        timer: 2000
+      });
+
+      setIsEditing(false);
+      // Refresh data secara halus tanpa reload seluruh halaman
+      setFormData(res.data.data); 
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: err.response?.data?.message || 'Terjadi kesalahan sistem.',
+        confirmButtonColor: '#d33'
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,31 +97,6 @@ export default function ProfilPetugas() {
     if (file) {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSave = async () => {
-    const data = new FormData();
-    data.append('nama', formData.nama);
-    data.append('email', formData.email);
-    data.append('no_hp', formData.no_hp);
-    data.append('status_petugas', formData.status_petugas);
-    if (formData.password) data.append('password', formData.password);
-    if (selectedFile) data.append('foto_profil', selectedFile);
-
-    try {
-      await axios.put('http://localhost:3000/api/petugas/profil/update', data, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      alert('Profil berhasil diperbarui!');
-      setIsEditing(false);
-      window.location.reload(); 
-    } catch (err) {
-      console.error(err);
-      alert('Gagal menyimpan data');
     }
   };
 

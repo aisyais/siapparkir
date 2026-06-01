@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../store/authStore';
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Star,
+  Users
+} from 'lucide-react'
 
 function SidebarItem({ icon, label, onClick, active }) {
   return (
@@ -68,8 +74,8 @@ export default function AdminLayout({ children }) {
       {/* HEADER */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-700 rounded-xl flex items-center justify-center text-white font-black text-sm">
-            A
+          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
+            <span className="text-white font-black text-sm">A</span>
           </div>
           <div>
             <h1 className="font-bold text-gray-800 leading-none">
@@ -99,57 +105,64 @@ export default function AdminLayout({ children }) {
         <aside className="hidden md:flex w-75 bg-blue-950 flex-col">
 
           {/* PROFILE SIDEBAR */}
-          <div
-            onClick={() => navigate('/internal/admin/profil')}
-            className="px-5 py-5 border-b border-blue-900 cursor-pointer hover:bg-blue-900 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <img
-                src={admin.foto}
-                className="w-10 h-10 rounded-full object-cover border border-white/20"
-                onError={(e) => {
-                  e.target.src = '/avatar-admin.jpg';
-                }}
-              />
+            <div className="px-3 py-4 border-b border-blue-900">
+            <button
+                onClick={() => navigate('/internal/admin/profil')}
+                className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-left overflow-hidden"
+            >
+                <div className="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden border border-white/20">
+                <img
+                    src={admin.foto}
+                    alt="Admin"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                    e.target.src = '/avatar-admin.jpg';
+                    }}
+                />
+                </div>
 
-              <div>
-                <h2 className="text-white font-bold text-sm">
-                  {admin.nama}
-                </h2>
-                <p className="text-blue-300 text-xs">
-                  Administrator
-                </p>
-              </div>
+                <div className="min-w-0">
+                <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider">
+                    Administrator
+                </div>
+
+                <div className="text-sm font-bold text-white truncate">
+                    {admin.nama}
+                </div>
+                </div>
+            </button>
             </div>
-          </div>
 
           {/* MENU */}
           <div className="space-y-1 flex-1 p-4">
             <SidebarItem
-              icon="📊"
-              label="Dashboard"
-              active={isActive('/internal/admin')}
-              onClick={() => navigate('/internal/admin')}
+                icon={<LayoutDashboard size={16} />}
+                label="Dashboard"
+                active={isActive('/internal/admin')}
+                onClick={() => navigate('/internal/admin')}
             />
+
             <SidebarItem
-              icon="📋"
-              label="Laporan Masuk"
-              active={isActive('/internal/admin/laporan')}
-              onClick={() => navigate('/internal/admin/laporan')}
+                icon={<ClipboardList size={16} />}
+                label="Laporan Masuk"
+                active={isActive('/internal/admin/laporan')}
+                onClick={() => navigate('/internal/admin/laporan')}
             />
+
             <SidebarItem
-              icon="📈"
-              label="Penilaian Masyarakat"
-              active={isActive('/internal/admin/penilaian')}
-              onClick={() => navigate('/internal/admin/penilaian')}
+                icon={<Star size={16} />}
+                label="Penilaian Masyarakat"
+                active={isActive('/internal/admin/penilaian')}
+                onClick={() => navigate('/internal/admin/penilaian')}
             />
+
             <SidebarItem
-              icon="⚙️"
-              label="Manajemen Petugas"
-              active={isActive('/internal/admin/petugas')}
-              onClick={() => navigate('/internal/admin/petugas')}
+                icon={<Users size={16} />}
+                label="Manajemen Petugas"
+                active={isActive('/internal/admin/petugas')}
+                onClick={() => navigate('/internal/admin/petugas')}
             />
-          </div>
+            </div>
 
           {/* LOGOUT */}
           <div className="p-4 border-t border-blue-900">

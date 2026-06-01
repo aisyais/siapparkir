@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
+import Swal from 'sweetalert2';
 
 export default function ManajemenPetugas() {
   const navigate = useNavigate();
@@ -37,7 +38,9 @@ export default function ManajemenPetugas() {
       );
 
       const payload = res.data?.data || {};
-      const data = Array.isArray(payload.data) ? payload.data : [];
+      const data = Array.isArray(payload.data)
+        ? payload.data
+        : [];
 
       setPetugasList(data);
       setFilteredPetugas(data);
@@ -50,7 +53,15 @@ export default function ManajemenPetugas() {
       });
 
     } catch (err) {
-      console.error('Gagal mengambil data:', err);
+      console.error(err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Memuat Data',
+        text: 'Data petugas tidak dapat diambil dari server.',
+        confirmButtonColor: '#001A57',
+      });
+
     } finally {
       setLoading(false);
     }
@@ -72,11 +83,120 @@ export default function ManajemenPetugas() {
     );
   }, [search, petugasList]);
 
+  const handleStatus = async (id_user, status_petugas) => {
+    try {
+      Swal.fire({
+        title: 'Memperbarui Status...',
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      await axios.put(
+        `http://localhost:3000/api/admin/petugas/${id_user}/status`,
+        { status_petugas },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await fetchPetugas();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: `Status petugas berhasil diubah menjadi ${status_petugas}.`,
+        confirmButtonColor: '#001A57',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Terjadi kesalahan saat mengubah status petugas.',
+        confirmButtonColor: '#001A57',
+      });
+    }
+  };
+
+  const updateStatusPetugas = async (id_user, status_petugas) => {
+    const result = await Swal.fire({
+      title: 'Ubah Status Petugas?',
+      text: `Status akan diubah menjadi "${status_petugas}".`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#001A57',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Ubah',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await axios.put(
+        `http://localhost:3000/api/admin/petugas/${id_user}/status`,
+        { status_petugas },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await fetchPetugas();
+
+      setEditingStatus(null);
+      setSelectedStatus('');
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Status petugas berhasil diperbarui.',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+
+    } catch (err) {
+      console.error(err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Terjadi kesalahan saat memperbarui status petugas.',
+        confirmButtonColor: '#001A57',
+      });
+    }
+  };
+  const [editingStatus, setEditingStatus] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
+
   return (
-    <>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Manajemen Petugas Lapangan
-      </h2>
+    <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
+      <div className="relative overflow-hidden bg-white border border-gray-200 rounded-3xl p-8 shadow-sm mb-8">
+        <div className="absolute right-6 top-6 w-32 h-32 bg-blue-50 rounded-full blur-3xl"></div>
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
+            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+              Data Personel
+            </span>
+          </div>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900">
+            Manajemen Petugas Lapangan
+          </h2>
+        </div>
+      </div>
 
       {loading ? (
         <div className="bg-white p-10 rounded-2xl border text-center text-gray-400">
@@ -130,7 +250,6 @@ export default function ManajemenPetugas() {
                       <tr
                         key={p.id_user}
                         className="hover:bg-gray-50 cursor-pointer"
-                        onClick={() => navigate(`/internal/admin/petugas/${p.id_user}`)}
                       >
                         <td className="px-6 py-4 font-mono text-blue-900">
                           #{p.kode_user || p.id_user}
@@ -165,7 +284,71 @@ export default function ManajemenPetugas() {
                         </td>
 
                         <td className="px-6 py-4">
-                          <StatusBadge status={p.status_petugas} />
+                          {editingStatus === p.id_user ? (
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-xl"
+                              >
+                                <option value="aktif">Aktif</option>
+                                <option value="istirahat">Istirahat</option>
+                                <option value="off">Off</option>
+                              </select>
+
+                              <button
+                                onClick={() =>
+                                  updateStatusPetugas(
+                                    p.id_user,
+                                    selectedStatus
+                                  )
+                                }
+                                className="
+                                  px-3 py-1.5
+                                  bg-green-600 text-white
+                                  rounded-lg text-xs font-semibold
+                                  transition-all duration-300
+                                  hover:bg-green-700
+                                  hover:shadow-xl
+                                  hover:scale-105
+                                  active:scale-95
+                                "
+                              >
+                                Simpan
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setEditingStatus(null)
+                                  setSelectedStatus('')
+                                }}
+                                className="
+                                  px-3 py-1.5
+                                  bg-gray-100 text-gray-700
+                                  border border-gray-300
+                                  rounded-lg text-xs font-semibold
+                                  transition-all duration-300
+                                  hover:bg-red-500
+                                  hover:text-white
+                                  hover:border-red-500
+                                  hover:shadow-xl
+                                  hover:scale-105
+                                  active:scale-95
+                                "
+                              >
+                                Batal
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingStatus(p.id_user)
+                                setSelectedStatus(p.status_petugas)
+                              }}
+                            >
+                              <StatusBadge status={p.status_petugas} />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -186,7 +369,7 @@ export default function ManajemenPetugas() {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
 

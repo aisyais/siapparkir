@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { cekStatusLaporan } from '../../api/public.api'
 import { STATUS_LABEL, STATUS_COLOR, formatTanggal } from '../../utils/formatters'
+import Swal from 'sweetalert2';
 
 export default function CekStatusPage() {
   const [kode, setKode]     = useState('')
@@ -9,19 +10,54 @@ export default function CekStatusPage() {
   const [loading, setLoading] = useState(false)
 
   const handleCek = async (e) => {
-    e.preventDefault()
-    setError(''); setHasil(null)
-    if (!kode.trim()) return setError('Masukkan kode laporan')
-    setLoading(true)
-    try {
-      const res = await cekStatusLaporan(kode.trim().toUpperCase())
-      setHasil(res.data.data)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Laporan tidak ditemukan')
-    } finally {
-      setLoading(false)
+    e.preventDefault();
+
+    // 1. Validasi Sederhana
+    if (!kode.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Oops...',
+        text: 'Masukkan kode laporan terlebih dahulu!',
+        confirmButtonColor: '#001A57'
+      });
+      return;
     }
-  }
+
+    setLoading(true);
+    setError(''); 
+    setHasil(null);
+
+    try {
+      // 2. Animasi Loading
+      Swal.fire({
+        title: 'Mencari Laporan...',
+        text: 'Sedang memeriksa status di database.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      const res = await cekStatusLaporan(kode.trim().toUpperCase());
+      
+      // 3. Jika Berhasil, tutup loading dan simpan hasil
+      setHasil(res.data.data);
+      Swal.close(); // Menutup modal loading
+
+    } catch (err) {
+      // 4. Jika Gagal, tampilkan pesan error yang cantik
+      const message = err.response?.data?.message || 'Laporan tidak ditemukan.';
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Pencarian Gagal',
+        text: message,
+        confirmButtonColor: '#d33'
+      });
+      
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

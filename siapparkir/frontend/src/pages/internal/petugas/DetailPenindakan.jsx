@@ -7,6 +7,7 @@ import {
   LogOut, LayoutDashboard, ClipboardList, History
 } from 'lucide-react'
 import useAuthStore from '../../../store/authStore'
+import Swal from 'sweetalert2';
 
 const TINDAKAN_LABEL = {
   teguran:         'Teguran (Warning)',
@@ -73,17 +74,62 @@ export default function DetailPenindakan() {
   }, [id, token])
 
   const handleMulai = async () => {
-    try {
-      await axios.put(
-        `http://localhost:3000/api/petugas/tugas/${id}/mulai`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setSudahMulai(true)
-    } catch {
-      alert('Gagal memulai penanganan')
+    const result = await Swal.fire({
+      title: 'Mulai Penanganan?',
+      text: "Status akan berubah menjadi 'Dalam Penanganan'.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#001A57',
+      confirmButtonText: 'Ya, Mulai'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.put(`http://localhost:3000/api/petugas/tugas/${id}/mulai`, {}, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        setSudahMulai(true);
+        Swal.fire('Berhasil!', 'Penanganan telah dimulai.', 'success');
+      } catch {
+        Swal.fire('Gagal', 'Gagal memulai penanganan.', 'error');
+      }
     }
-  }
+  };
+
+  const handleSelesaikan = async () => {
+    if (!fotoBukti) {
+      return Swal.fire({ icon: 'warning', title: 'Foto Wajib Diunggah', text: 'Mohon lampirkan foto bukti tindakan.' });
+    }
+
+    const result = await Swal.fire({
+      title: 'Selesaikan Tugas?',
+      text: "Tindakan ini tidak dapat dibatalkan.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: 'Ya, Selesai'
+    });
+
+    if (result.isConfirmed) {
+      setSubmitting(true);
+      try {
+        const formData = new FormData();
+        formData.append('jenis_tindakan', tindakan);
+        formData.append('catatan_tindakan', catatan);
+        formData.append('foto_tindakan', fotoBukti);
+
+        const res = await axios.post(`http://localhost:3000/api/petugas/tugas/${id}/selesai`, formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+        
+        navigate('/internal/petugas/selesai', { state: { hasil: res.data?.data } });
+      } catch (err) {
+        Swal.fire('Error', err.response?.data?.message || 'Gagal menyelesaikan tugas', 'error');
+      } finally {
+        setSubmitting(false);
+      }
+    }
+  };
 
   const handleFotoChange = (e) => {
     const file = e.target.files[0]
@@ -93,56 +139,32 @@ export default function DetailPenindakan() {
     }
   }
 
-  const handleSelesaikan = async () => {
-    if (!fotoBukti) return alert('Harap unggah foto bukti tindakan!')
-    setSubmitting(true)
-    try {
-      const formData = new FormData()
-      formData.append('jenis_tindakan',   tindakan)
-      formData.append('catatan_tindakan', catatan)
-      formData.append('foto_tindakan',    fotoBukti)
-
-      const res = await axios.post(
-        `http://localhost:3000/api/petugas/tugas/${id}/selesai`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      )
-      navigate('/internal/petugas/selesai', {
-        state: { hasil: res.data?.data }
-      })
-    } catch (err) {
-      alert(err.response?.data?.message || 'Gagal menyelesaikan tugas')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
+  // --- LOADING STATE ---
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-      <p className="text-gray-400">⏳ Memuat detail...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-900 rounded-full animate-spin mb-4"></div>
+      <p className="text-gray-500 font-medium animate-pulse">Menyiapkan detail tugas...</p>
     </div>
-  )
+  );
 
+  // --- ERROR STATE ---
   if (error || !penugasan) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-      <div className="text-center">
-        <p className="text-gray-600 font-semibold mb-4">
-          {error || 'Data tidak ditemukan'}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+      <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl text-center max-w-sm w-full">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">Oops! Ada Masalah</h2>
+        <p className="text-gray-500 text-sm mb-6">
+          {error || 'Data penugasan tidak ditemukan di sistem.'}
         </p>
         <button
           onClick={() => navigate(-1)}
-          className="px-5 py-2 bg-[#001A57] text-white rounded-xl text-sm"
+          className="w-full px-5 py-3 bg-[#001A57] text-white rounded-2xl font-semibold hover:bg-blue-900 transition-all active:scale-95"
         >
-          ← Kembali
+          Kembali ke Sebelumnya
         </button>
       </div>
     </div>
-  )
+  );
 
   const lap      = penugasan.Laporan || {}
   const tindakanData = lap.tindakan?.[0] || null

@@ -19,7 +19,7 @@ export default function PreviewPDF() {
     setRefId("REKAP-" + Math.floor(100000 + Math.random() * 900000));
   }, []);
 
-  const totalDerek = data.filter(item => item.tindakan === "DEREK PAKSA").length;
+  const totalDerek = data.filter(item => item.tindakan === "DEREK").length;
 
   return (
     <div className="bg-gray-100 min-h-screen py-10 antialiased print:bg-white print:p-0">

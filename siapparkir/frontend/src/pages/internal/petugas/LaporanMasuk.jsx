@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { Search, Filter } from 'lucide-react'
 import useAuthStore from '../../../store/authStore'
+import Swal from 'sweetalert2'
 
 export default function LaporanMasuk() {
   const navigate = useNavigate()
@@ -18,47 +19,61 @@ export default function LaporanMasuk() {
     indikasi_duplikat: 0,
   })
 
+  // 1. Data Fetching yang lebih profesional
   useEffect(() => {
-    const fetchData = async () => {
+    let isMounted = true;
+
+    const fetchLaporanData = async () => {
       try {
-        setLoading(true)
-        const res = await axios.get(
-          'http://localhost:3000/api/petugas/laporan-masuk',
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        const payload = res.data?.data || {}
-        const dataArray = Array.isArray(payload.data) ? payload.data : []
+        setLoading(true);
+        const res = await axios.get('http://localhost:3000/api/petugas/laporan-masuk', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-        setLaporan(dataArray)
-        setFilteredLaporan(dataArray)
+        if (!isMounted) return;
+
+        const { data, statistik } = res.data?.data || {};
+        const dataArray = Array.isArray(data) ? data : [];
+
+        setLaporan(dataArray);
+        setFilteredLaporan(dataArray);
         setStats({
-          total_antrian: payload.statistik?.total_antrian || 0,
-          belum_verifikasi: payload.statistik?.belum_verifikasi || 0,
-          indikasi_duplikat: payload.statistik?.indikasi_duplikat || 0,
-        })
+          total_antrian: statistik?.total_antrian || 0,
+          belum_verifikasi: statistik?.belum_verifikasi || 0,
+          indikasi_duplikat: statistik?.indikasi_duplikat || 0,
+        });
       } catch (err) {
-        console.error('Gagal mengambil data:', err)
+        console.error('Gagal mengambil data:', err);
+        // Opsional: Tambahkan SweetAlert2 di sini jika ingin feedback ke user
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false);
       }
-    }
-    fetchData()
-  }, [token])
+    };
 
+    if (token) fetchLaporanData();
+
+    return () => { isMounted = false; };
+  }, [token]);
+
+  // 2. Search dengan optimasi performa
   useEffect(() => {
-    if (!search.trim()) {
-      setFilteredLaporan(laporan)
-      return
-    }
-    const keyword = search.toLowerCase()
-    setFilteredLaporan(
-      laporan.filter((item) =>
-        item.kode_laporan?.toLowerCase().includes(keyword) ||
-        item.nomor_plat?.toLowerCase().includes(keyword) ||
-        item.alamat?.toLowerCase().includes(keyword)
-      )
-    )
-  }, [search, laporan])
+    const handler = setTimeout(() => {
+      if (!search.trim()) {
+        setFilteredLaporan(laporan);
+        return;
+      }
+
+      const keyword = search.toLowerCase();
+      const result = laporan.filter((item) =>
+        [item.kode_laporan, item.nomor_plat, item.alamat]
+          .some(field => field?.toLowerCase().includes(keyword))
+      );
+      
+      setFilteredLaporan(result);
+    }, 300); // Debounce 300ms agar pencarian tidak "laggy" saat mengetik
+
+    return () => clearTimeout(handler);
+  }, [search, laporan]);
 
   const formatWaktu = (dateStr) => {
     if (!dateStr) return '-'
@@ -139,8 +154,7 @@ export default function LaporanMasuk() {
                   filteredLaporan.map((item) => (
                     <tr
                       key={item.id_laporan}
-                      onClick={() => navigate(`/internal/petugas/tugas/${item.id_laporan}`)}
-                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       {/* ID Laporan */}
                       <td className="px-6 py-4">
