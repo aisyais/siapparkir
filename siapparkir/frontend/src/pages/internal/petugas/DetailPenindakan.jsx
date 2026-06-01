@@ -3,25 +3,51 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import {
   ArrowLeft, MapPin, Camera, Truck,
-  Megaphone, Lock, Move, CheckCircle, LogOut,
-  LayoutDashboard, ClipboardList, Users
+  Megaphone, Lock, Move, CheckCircle,
+  LogOut, LayoutDashboard, ClipboardList, History
 } from 'lucide-react'
 import useAuthStore from '../../../store/authStore'
 
+const TINDAKAN_LABEL = {
+  teguran:         'Teguran (Warning)',
+  gembok:          'Gembok Ban',
+  derek:           'Derek Kendaraan',
+  pindah:          'Pemindahan Kendaraan',
+  tidak_ditemukan: 'Kendaraan Tidak Ditemukan',
+}
+
+const TINDAKAN_STYLE = {
+  teguran:         'bg-gray-100 text-gray-700',
+  gembok:          'bg-orange-100 text-orange-700',
+  derek:           'bg-red-100 text-red-700',
+  pindah:          'bg-blue-100 text-blue-700',
+  tidak_ditemukan: 'bg-purple-100 text-purple-700',
+}
+
+const formatTanggal = (dateStr) => {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
 export default function DetailPenindakan() {
-  const navigate    = useNavigate()
-  const { id }      = useParams() // id_penugasan
-  const token       = useAuthStore((s) => s.token)
+  const navigate = useNavigate()
+  const { id }   = useParams()
+  const token    = useAuthStore((s) => s.token)
 
   const [penugasan, setPenugasan]     = useState(null)
   const [loading, setLoading]         = useState(true)
   const [submitting, setSubmitting]   = useState(false)
+  const [error, setError]             = useState('')
+
+  // Form tindakan (hanya untuk tugas aktif)
   const [tindakan, setTindakan]       = useState('teguran')
   const [catatan, setCatatan]         = useState('')
   const [fotoBukti, setFotoBukti]     = useState(null)
   const [previewFoto, setPreviewFoto] = useState(null)
   const [sudahMulai, setSudahMulai]   = useState(false)
-  const [error, setError]             = useState('')
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -33,18 +59,16 @@ export default function DetailPenindakan() {
         )
         const data = res.data?.data
         setPenugasan(data)
-        // Cek apakah sudah dalam penanganan
         if (data?.Laporan?.status_laporan === 'dalam_penanganan') {
           setSudahMulai(true)
         }
       } catch (err) {
-        console.error('Gagal memuat detail tugas:', err)
+        console.error('Gagal memuat detail:', err)
         setError('Gagal memuat data tugas')
       } finally {
         setLoading(false)
       }
     }
-
     fetchDetail()
   }, [id, token])
 
@@ -56,8 +80,7 @@ export default function DetailPenindakan() {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setSudahMulai(true)
-    } catch (err) {
-      console.error('Gagal memulai penanganan:', err)
+    } catch {
       alert('Gagal memulai penanganan')
     }
   }
@@ -72,7 +95,6 @@ export default function DetailPenindakan() {
 
   const handleSelesaikan = async () => {
     if (!fotoBukti) return alert('Harap unggah foto bukti tindakan!')
-
     setSubmitting(true)
     try {
       const formData = new FormData()
@@ -90,13 +112,10 @@ export default function DetailPenindakan() {
           },
         }
       )
-
-      // Navigasi ke halaman sukses dengan data hasil tindakan
       navigate('/internal/petugas/selesai', {
         state: { hasil: res.data?.data }
       })
     } catch (err) {
-      console.error('Gagal menyelesaikan tugas:', err)
       alert(err.response?.data?.message || 'Gagal menyelesaikan tugas')
     } finally {
       setSubmitting(false)
@@ -105,14 +124,16 @@ export default function DetailPenindakan() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-      <p className="text-gray-400 text-sm">⏳ Memuat detail tugas...</p>
+      <p className="text-gray-400">⏳ Memuat detail...</p>
     </div>
   )
 
   if (error || !penugasan) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
       <div className="text-center">
-        <p className="text-gray-600 font-semibold mb-4">{error || 'Tugas tidak ditemukan'}</p>
+        <p className="text-gray-600 font-semibold mb-4">
+          {error || 'Data tidak ditemukan'}
+        </p>
         <button
           onClick={() => navigate(-1)}
           className="px-5 py-2 bg-[#001A57] text-white rounded-xl text-sm"
@@ -123,7 +144,9 @@ export default function DetailPenindakan() {
     </div>
   )
 
-  const lap = penugasan.Laporan || {}
+  const lap      = penugasan.Laporan || {}
+  const tindakanData = lap.tindakan?.[0] || null
+  const sudahSelesai = penugasan.status_penugasan === 'selesai'
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
@@ -142,7 +165,9 @@ export default function DetailPenindakan() {
           </div>
           <div>
             <h1 className="font-bold text-gray-800 leading-none">SiapParkir</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Detail Penindakan</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {sudahSelesai ? 'Detail Riwayat Penindakan' : 'Detail Penindakan'}
+            </p>
           </div>
         </div>
         <img
@@ -165,12 +190,12 @@ export default function DetailPenindakan() {
             <SidebarItem
               icon={<ClipboardList size={16}/>}
               label="Laporan Masuk"
-              active
               onClick={() => navigate('/internal/petugas/laporan')}
             />
             <SidebarItem
-              icon={<Users size={16}/>}
-              label="Petugas Lapangan"
+              icon={<History size={16}/>}
+              label="Riwayat Penindakan"
+              active={sudahSelesai}
               onClick={() => navigate('/internal/petugas/tugas')}
             />
           </nav>
@@ -187,20 +212,23 @@ export default function DetailPenindakan() {
 
           {/* PAGE HEADER */}
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-3 mb-1 flex-wrap">
               <h2 className="text-xl font-bold text-gray-900">
                 #{lap.kode_laporan || '-'}
               </h2>
-              <span className="text-xs font-bold px-2 py-1 rounded bg-red-50 text-red-600">
-                {penugasan.tindakan_direkomendasikan
-                  ? `Rekomendasi: ${penugasan.tindakan_direkomendasikan}`
-                  : 'Membutuhkan Penindakan'}
-              </span>
+              {/* Badge status */}
+              {sudahSelesai ? (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-700">
+                  ✓ Penindakan Selesai
+                </span>
+              ) : (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600">
+                  Membutuhkan Penindakan
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-400">
-              Laporan diterima {lap.waktu_laporan
-                ? new Date(lap.waktu_laporan).toLocaleString('id-ID')
-                : '-'}
+              Dilaporkan {formatTanggal(lap.waktu_laporan)}
             </p>
           </div>
 
@@ -260,149 +288,266 @@ export default function DetailPenindakan() {
                     className="w-full h-52 object-cover rounded-xl"
                   />
                 ) : (
-                  <div className="w-full h-52 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
+                  <div className="w-full h-52 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
                     Tidak ada foto
                   </div>
                 )}
-                {lap.latitude && lap.longitude && (
-                  <p className="text-xs text-gray-400 mt-2 text-center">
-                    GPS: {parseFloat(lap.latitude).toFixed(6)}, {parseFloat(lap.longitude).toFixed(6)}
-                  </p>
-                )}
               </div>
 
-              {/* Tombol Mulai (jika belum mulai) */}
-              {!sudahMulai && (
-                <button
-                  onClick={handleMulai}
-                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"
-                >
-                  🚔 Mulai Penanganan
-                </button>
-              )}
-
-              {sudahMulai && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700 font-medium text-center">
-                  🚔 Sedang Dalam Penanganan
+              {/* Log Status */}
+              {lap.log && lap.log.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
+                    Riwayat Status
+                  </h3>
+                  <div className="space-y-3">
+                    {[...lap.log].reverse().map((log, i) => (
+                      <div key={i} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-2 h-2 rounded-full bg-[#001A57] mt-1.5 flex-shrink-0" />
+                          {i < lap.log.length - 1 && (
+                            <div className="w-0.5 flex-1 bg-gray-200 mt-1" />
+                          )}
+                        </div>
+                        <div className="pb-3">
+                          <p className="text-xs font-bold text-gray-700 capitalize">
+                            {log.status_baru?.replace(/_/g, ' ')}
+                          </p>
+                          {log.catatan && (
+                            <p className="text-xs text-gray-400 mt-0.5">{log.catatan}</p>
+                          )}
+                          <p className="text-[10px] text-gray-300 mt-0.5">
+                            {formatTanggal(log.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* KOLOM KANAN — Form Tindakan */}
+            {/* KOLOM KANAN */}
             <div className="space-y-5">
 
-              {/* Pilih Tindakan */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
-                  Tindakan Lapangan
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'teguran',         icon: <Megaphone size={20}/>, label: 'Teguran' },
-                    { id: 'gembok',          icon: <Lock size={20}/>,      label: 'Gembok' },
-                    { id: 'derek',           icon: <Truck size={20}/>,     label: 'Derek' },
-                    { id: 'pindah',          icon: <Move size={20}/>,      label: 'Pindah' },
-                    { id: 'tidak_ditemukan', icon: <span className="text-xl">🔍</span>, label: 'Tidak Ditemukan' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => setTindakan(opt.id)}
-                      className={`p-4 border-2 rounded-xl flex flex-col items-center gap-2 text-xs font-bold transition-all
-                        ${tindakan === opt.id
-                          ? 'border-[#001A57] bg-[#001A57]/5 text-[#001A57]'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                        }
-                        ${opt.id === 'tidak_ditemukan' ? 'col-span-2' : ''}
-                      `}
-                    >
-                      {opt.icon}
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* ============================================
+                  MODE SELESAI — Tampilkan hasil tindakan
+              ============================================ */}
+              {sudahSelesai && tindakanData && (
+                <>
+                  {/* Hasil Tindakan */}
+                  <div className="bg-white p-6 rounded-2xl border border-green-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-xs font-bold text-gray-400 uppercase">
+                        Hasil Tindakan
+                      </h3>
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
+                        ✓ Terverifikasi
+                      </span>
+                    </div>
 
-              {/* Upload Foto Tindakan */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
-                  Bukti Tindakan
-                </h3>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFotoChange}
-                  className="hidden"
-                  id="inputFotoTindakan"
-                />
-                {previewFoto ? (
-                  <div className="relative">
-                    <img
-                      src={previewFoto}
-                      alt="Preview"
-                      className="w-full h-44 object-cover rounded-xl"
-                    />
-                    <button
-                      onClick={() => {
-                        setFotoBukti(null)
-                        setPreviewFoto(null)
-                      }}
-                      className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg"
-                    >
-                      Ganti
-                    </button>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase mb-1">
+                          Jenis Tindakan
+                        </p>
+                        <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                          TINDAKAN_STYLE[tindakanData.jenis_tindakan] || 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {TINDAKAN_LABEL[tindakanData.jenis_tindakan] || tindakanData.jenis_tindakan}
+                        </span>
+                      </div>
+
+                      {tindakanData.catatan_tindakan && (
+                        <div>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase mb-1">
+                            Catatan Petugas
+                          </p>
+                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl">
+                            {tindakanData.catatan_tindakan}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <p className="text-gray-400 font-bold uppercase mb-1">
+                            Waktu Mulai
+                          </p>
+                          <p className="text-gray-700 font-medium">
+                            {formatTanggal(tindakanData.waktu_mulai)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 font-bold uppercase mb-1">
+                            Waktu Selesai
+                          </p>
+                          <p className="text-gray-700 font-medium">
+                            {formatTanggal(tindakanData.waktu_selesai)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <label
-                    htmlFor="inputFotoTindakan"
-                    className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center cursor-pointer hover:bg-gray-50 transition"
+
+                  {/* Foto Tindakan */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
+                      Foto Bukti Tindakan
+                    </h3>
+                    {tindakanData.foto_tindakan ? (
+                      <div className="relative">
+                        <img
+                          src={`http://localhost:3000/uploads/${tindakanData.foto_tindakan}`}
+                          alt="Bukti tindakan"
+                          className="w-full h-56 object-cover rounded-xl"
+                        />
+                        <div className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md">
+                          📍 {formatTanggal(tindakanData.waktu_selesai)}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-56 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
+                        Tidak ada foto tindakan
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tombol kembali */}
+                  <button
+                    onClick={() => navigate('/internal/petugas/tugas')}
+                    className="w-full py-3.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
                   >
-                    <Camera className="text-gray-400 mb-2" size={28} />
-                    <span className="text-xs font-bold text-gray-500">
-                      Ambil atau Unggah Foto Hasil
-                    </span>
-                    <span className="text-xs text-gray-400 mt-1">
-                      JPG, PNG maks 5MB
-                    </span>
-                  </label>
-                )}
-              </div>
+                    ← Kembali ke Riwayat
+                  </button>
+                </>
+              )}
 
-              {/* Catatan Petugas */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">
-                  Catatan Petugas
-                </h3>
-                <textarea
-                  value={catatan}
-                  onChange={(e) => setCatatan(e.target.value)}
-                  placeholder="Masukkan keterangan tambahan jika diperlukan..."
-                  rows={4}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#001A57] resize-none"
-                />
-              </div>
+              {/* ============================================
+                  MODE AKTIF — Form tindakan
+              ============================================ */}
+              {!sudahSelesai && (
+                <>
+                  {/* Pilih Tindakan */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
+                      Tindakan Lapangan
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { id: 'teguran',         icon: <Megaphone size={20}/>, label: 'Teguran' },
+                        { id: 'gembok',          icon: <Lock size={20}/>,      label: 'Gembok' },
+                        { id: 'derek',           icon: <Truck size={20}/>,     label: 'Derek' },
+                        { id: 'pindah',          icon: <Move size={20}/>,      label: 'Pindah' },
+                        { id: 'tidak_ditemukan', icon: <span className="text-xl">🔍</span>, label: 'Tidak Ditemukan' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setTindakan(opt.id)}
+                          className={`p-4 border-2 rounded-xl flex flex-col items-center gap-2 text-xs font-bold transition-all
+                            ${tindakan === opt.id
+                              ? 'border-[#001A57] bg-[#001A57]/5 text-[#001A57]'
+                              : 'border-gray-200 text-gray-500 hover:border-gray-300'}
+                            ${opt.id === 'tidak_ditemukan' ? 'col-span-2' : ''}
+                          `}
+                        >
+                          {opt.icon} {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Tombol Selesaikan */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="px-5 py-3.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSelesaikan}
-                  disabled={submitting || !sudahMulai}
-                  className="flex-1 py-3.5 bg-[#001A57] hover:bg-[#00133f] disabled:opacity-50 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"
-                >
-                  <CheckCircle size={16} />
-                  {submitting ? 'Menyimpan...' : 'Selesaikan Penugasan'}
-                </button>
-              </div>
+                  {/* Upload Foto */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">
+                      Bukti Tindakan
+                    </h3>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFotoChange}
+                      className="hidden"
+                      id="inputFotoTindakan"
+                    />
+                    {previewFoto ? (
+                      <div className="relative">
+                        <img
+                          src={previewFoto}
+                          alt="Preview"
+                          className="w-full h-44 object-cover rounded-xl"
+                        />
+                        <button
+                          onClick={() => { setFotoBukti(null); setPreviewFoto(null) }}
+                          className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg"
+                        >
+                          Ganti
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="inputFotoTindakan"
+                        className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center cursor-pointer hover:bg-gray-50 transition"
+                      >
+                        <Camera className="text-gray-400 mb-2" size={28} />
+                        <span className="text-xs font-bold text-gray-500">
+                          Ambil atau Unggah Foto Hasil
+                        </span>
+                      </label>
+                    )}
+                  </div>
 
-              {!sudahMulai && (
-                <p className="text-xs text-center text-gray-400">
-                  Tekan "Mulai Penanganan" terlebih dahulu sebelum menyelesaikan tugas
-                </p>
+                  {/* Catatan */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">
+                      Catatan Petugas
+                    </h3>
+                    <textarea
+                      value={catatan}
+                      onChange={(e) => setCatatan(e.target.value)}
+                      placeholder="Masukkan keterangan tambahan..."
+                      rows={3}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#001A57] resize-none"
+                    />
+                  </div>
+
+                  {/* Tombol */}
+                  <div className="space-y-3">
+                    {!sudahMulai && (
+                      <button
+                        onClick={handleMulai}
+                        className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm transition"
+                      >
+                        🚔 Mulai Penanganan
+                      </button>
+                    )}
+                    {sudahMulai && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700 font-medium text-center">
+                        🚔 Sedang Dalam Penanganan
+                      </div>
+                    )}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => navigate(-1)}
+                        className="px-5 py-3.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handleSelesaikan}
+                        disabled={submitting || !sudahMulai}
+                        className="flex-1 py-3.5 bg-[#001A57] hover:bg-[#00133f] disabled:opacity-50 text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        {submitting ? 'Menyimpan...' : 'Selesaikan Penugasan'}
+                      </button>
+                    </div>
+                    {!sudahMulai && (
+                      <p className="text-xs text-center text-gray-400">
+                        Tekan "Mulai Penanganan" terlebih dahulu
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
 
             </div>
