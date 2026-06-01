@@ -151,8 +151,11 @@ export default function DetailPenindakan() {
   return (
     <div className="max-w-8xl mx-auto">
       {/* Tombol Back */}
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-500 mb-6 hover:text-gray-800">
-        <ArrowLeft size={16} /> Kembali
+      <button
+        onClick={() => navigate(-1)}
+        className="px-5 py-2 bg-[#001A57] text-white rounded-xl text-sm hover:bg-[#00133f] transition-all mb-8"
+      >
+        ← Kembali
       </button>
 
       {/* Konten Halaman (Layout Header/Sidebar sudah dihapus) */}
