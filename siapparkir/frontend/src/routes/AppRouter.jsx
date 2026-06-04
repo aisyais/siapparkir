@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 
 import LandingPage       from '../pages/public/LandingPage'
 import LaporPage         from '../pages/public/LaporPage'
@@ -39,6 +39,24 @@ const PetugasRouteWrapper = () => (
     <Outlet />
   </PetugasLayout>
 );
+
+function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6 text-center">
+      <h1 className="text-7xl font-extrabold text-blue-950">
+        404
+      </h1>
+
+      <h2 className="mt-4 text-2xl font-bold text-gray-900">
+        Halaman tidak ditemukan
+      </h2>
+
+      <p className="text-gray-500 mt-2 text-sm max-w-md">
+        Maaf, halaman yang kamu cari tidak tersedia atau belum terdaftar di sistem SiapParkir.
+      </p>
+    </div>
+  );
+}
 
 export default function AppRouter() {
   return (
@@ -88,8 +106,7 @@ export default function AppRouter() {
           <Route path="/internal/petugas/selesai" element={<SelesaiPenindakan />} />
         </Route>
 
-        {/* Jika mengetik rute asal, kembalikan ke Landing Page awal */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
