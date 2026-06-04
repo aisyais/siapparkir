@@ -27,6 +27,7 @@ import SuksesPage        from '../pages/public/SuksesPage'
 import RiwayatPenindakan from '../pages/internal/petugas/RiwayatPenindakan'
 
 import DetailLaporanPage from '../pages/public/DetailLaporanPage'
+import EditPetugas from '../pages/internal/admin/EditPetugas'
 
 const AdminRouteWrapper = () => (
   <AdminLayout>
@@ -90,6 +91,7 @@ export default function AppRouter() {
             <Route path="/internal/admin/tambah_petugas" element={<TambahPetugas />} />
             <Route path="/internal/admin/penilaian" element={<PenilaianMasyarakat />} />
             <Route path="/internal/admin/profil" element={<ProfilAdmin />} />
+            <Route path="/internal/admin/petugas/:id/edit" element={<EditPetugas />} />
           </Route>
           <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
         </Route>

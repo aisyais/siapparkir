@@ -417,6 +417,32 @@ exports.getPetugasList = async (req, res) => {
 }
 
 // ============================================================
+// PETUGAS — Detail satu petugas by ID
+// ============================================================
+exports.getPetugasById = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const petugas = await User.findOne({
+      where: { id_user: id, role: 'petugas' },
+      attributes: { exclude: ['password'] },
+      include: [{ model: Wilayah, as: 'wilayah', required: false }],
+    })
+
+    if (!petugas) return fail(res, 'Petugas tidak ditemukan', 404)
+
+    // Hitung total penindakan
+    const jumlah_penindakan = await Tindakan.count({
+      where: { id_petugas: id, status_tindakan: 'selesai' }
+    })
+
+    return ok(res, { ...petugas.toJSON(), jumlah_penindakan })
+  } catch (err) {
+    console.error(err)
+    return fail(res, 'Server error', 500)
+  }
+}
+// ============================================================
 // PETUGAS — BUAT AKUN BARU
 // ============================================================
 

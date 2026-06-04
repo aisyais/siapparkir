@@ -28,7 +28,6 @@ export default function MasyarakatLayout() {
       {/* HEADER */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">
-          {/* LOGO P - KLIK UNTUK BUKA SIDEBAR DI HP */}
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -38,8 +37,12 @@ export default function MasyarakatLayout() {
           </button>
 
           <div>
-            <h1 className="font-bold text-gray-800 leading-none">SiapParkir</h1>
-            <p className="text-xs text-gray-400 mt-0.5">Portal Masyarakat</p>
+            <h1 className="font-bold text-gray-800 leading-none">
+              SiapParkir
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Portal Masyarakat
+            </p>
           </div>
         </div>
       </header>
@@ -52,7 +55,6 @@ export default function MasyarakatLayout() {
         />
       )}
 
-      {/* CONTENT WRAPPER */}
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR */}
         <aside
@@ -79,6 +81,7 @@ export default function MasyarakatLayout() {
               <div className="w-10 h-10 flex-shrink-0 bg-blue-700 rounded-full flex items-center justify-center text-white font-bold">
                 👤
               </div>
+
               <div className="min-w-0">
                 <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider">
                   Masyarakat
@@ -94,7 +97,7 @@ export default function MasyarakatLayout() {
           <div className="space-y-1 flex-1 p-4">
             <button
               onClick={() => goTo('/lapor')}
-              className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-sm font-semibold transition-all bg-white/10 border border-white/30 text-white hover:bg-blue-600 hover:border-blue-500"
+              className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-sm font-semibold transition-all bg-white/10 border border-white/30 text-white hover:bg-blue-600 hover:border-blue-500 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:shadow-[0_0_15px_rgba(37,99,235,0.5)]"
             >
               <PlusCircle size={16} />
               <span>Laporan Baru</span>
@@ -106,12 +109,14 @@ export default function MasyarakatLayout() {
               active={isActive('/dashboard')}
               onClick={() => goTo('/dashboard')}
             />
+
             <SidebarItem
               icon={<ClipboardList size={16} />}
               label="Laporan Masuk"
               active={isActive('/lapor')}
               onClick={() => goTo('/lapor')}
             />
+
             <SidebarItem
               icon={<History size={16} />}
               label="Riwayat Laporan"
@@ -124,9 +129,10 @@ export default function MasyarakatLayout() {
           <div className="p-4 border-t border-blue-900">
             <button
               onClick={() => goTo('/')}
-              className="w-full flex items-center justify-center gap-2 text-blue-200 text-sm font-semibold py-2.5 rounded-xl border border-blue-800 transition-all duration-200 hover:bg-red-500 hover:text-white hover:border-red-500"
+              className="w-full flex items-center justify-center gap-2 text-blue-200 text-sm font-semibold py-2.5 rounded-xl border border-blue-800 transition-all duration-200 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
             >
-              <LogOut size={16} /> Keluar
+              <LogOut size={16} />
+              Keluar
             </button>
           </div>
         </aside>

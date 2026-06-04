@@ -4,6 +4,8 @@ import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
 import Swal from 'sweetalert2';
 
+
+
 export default function ManajemenPetugas() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
@@ -246,6 +248,7 @@ export default function ManajemenPetugas() {
                     <th className="px-6 py-4 text-left">Wilayah</th>
                     <th className="px-6 py-4 text-left">Penindakan</th>
                     <th className="px-6 py-4 text-left">Status</th>
+                    <th className="px-6 py-4 text-center">Aksi</th>
                   </tr>
                 </thead>
 
@@ -355,6 +358,26 @@ export default function ManajemenPetugas() {
                             </button>
                           )}
                         </td>
+                        <td className="px-6 py-4 text-center">
+  <button
+    onClick={() =>
+      navigate(`/internal/admin/petugas/${p.id_user}/edit`)
+    }
+    className="
+      px-4 py-2
+      bg-blue-950 text-white
+      rounded-lg
+      text-xs font-semibold
+      transition-all duration-300
+      hover:bg-blue-800
+      hover:shadow-lg
+      hover:scale-105
+      active:scale-95
+    "
+  >
+    Edit
+  </button>
+</td>
                       </tr>
                     ))
                   ) : (
