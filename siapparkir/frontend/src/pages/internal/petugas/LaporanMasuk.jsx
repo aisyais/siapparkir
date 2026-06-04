@@ -98,9 +98,23 @@ export default function LaporanMasuk() {
   return (
     <div className="space-y-8">
       {/* TITLE */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Antrian Laporan Masuk</h1>
-        <p className="text-gray-500 text-sm">Verifikasi dan tugaskan petugas untuk laporan pelanggaran terbaru.</p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 rounded-3xl p-8 shadow-sm mb-8">
+        <div className="absolute right-0 top-0 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl"></div>
+
+        <div className="relative">
+          <span className="text-blue-200 text-xs uppercase tracking-[0.25em] font-bold">
+            Sistem SiapParkir
+          </span>
+
+          <h1 className="text-4xl font-extrabold text-white mt-2">
+            Antrian Laporan Masuk
+          </h1>
+
+          <p className="text-blue-100 mt-3 max-w-2xl text-sm leading-relaxed">
+            Tinjau laporan pelanggaran parkir yang masuk, lakukan proses verifikasi,
+            dan distribusikan penugasan kepada petugas lapangan secara terstruktur.
+          </p>
+        </div>
       </div>
 
       {/* STAT CARDS */}

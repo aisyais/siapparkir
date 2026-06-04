@@ -88,9 +88,6 @@ export default function Dashboard() {
             <div className="h-8 w-1.5 bg-blue-700 rounded-full"></div>
             <h2 className="text-2xl font-black text-gray-800 tracking-tight">Riwayat Laporan</h2>
           </div>
-          <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
-            Tampilan Terkini
-          </span>
         </div>
 
         {loading && (

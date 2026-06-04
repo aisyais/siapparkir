@@ -183,18 +183,23 @@ export default function ManajemenPetugas() {
 
   return (
     <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
-      <div className="relative overflow-hidden bg-white border border-gray-200 rounded-3xl p-8 shadow-sm mb-8">
-        <div className="absolute right-6 top-6 w-32 h-32 bg-blue-50 rounded-full blur-3xl"></div>
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
-            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
-              Data Personel
-            </span>
-          </div>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 rounded-3xl p-8 shadow-sm mb-8">
+        <div className="absolute right-0 top-0 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl"></div>
+
+        <div className="relative">
+          <span className="text-blue-200 text-xs uppercase tracking-[0.25em] font-bold">
+            Sistem SiapParkir
+          </span>
+
+          <h1 className="text-4xl font-extrabold text-white mt-2">
             Manajemen Petugas Lapangan
-          </h2>
+          </h1>
+
+          <p className="text-blue-100 mt-3 max-w-2xl text-sm leading-relaxed">
+            Kelola data petugas, pantau status akun, serta pastikan distribusi
+            personel lapangan berjalan efektif untuk mendukung operasional
+            penanganan parkir liar.
+          </p>
         </div>
       </div>
 

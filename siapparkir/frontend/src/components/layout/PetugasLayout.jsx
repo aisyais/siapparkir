@@ -5,7 +5,8 @@ import {
   LayoutDashboard,
   ClipboardList,
   LogOut,
-  History
+  History,
+  X
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
@@ -29,6 +30,8 @@ export default function PetugasLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const token = useAuthStore((s) => s.token);
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [petugas, setPetugas] = useState({
     nama: 'Petugas',
@@ -78,18 +81,29 @@ export default function PetugasLayout({ children }) {
   const isRiwayatActive =
     pathname === '/internal/petugas/riwayat';
 
+  const goTo = (path) => {
+    navigate(path);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
 
       {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
+
+          {/* LOGO P - KLIK UNTUK BUKA SIDEBAR DI HP */}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center md:cursor-default"
+          >
             <span className="text-white font-black text-sm">
               P
             </span>
-          </div>
+          </button>
 
           <div>
             <h1 className="font-bold text-gray-800 leading-none">
@@ -115,15 +129,40 @@ export default function PetugasLayout({ children }) {
 
       </header>
 
-      <div className="flex flex-1">
+      {/* OVERLAY MOBILE */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+        />
+      )}
+
+      <div className="flex flex-1 overflow-hidden">
 
         {/* SIDEBAR */}
-        <aside className="hidden md:flex w-75 bg-blue-950 flex-col">
+        <aside
+          className={`
+            fixed md:static top-0 left-0 z-50 h-screen w-72 bg-blue-950 flex flex-col
+            transform transition-transform duration-300
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            md:translate-x-0
+          `}
+        >
+
+          {/* CLOSE BUTTON MOBILE */}
+          <div className="md:hidden flex justify-end p-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-white"
+            >
+              <X size={22} />
+            </button>
+          </div>
 
           {/* PROFILE SIDEBAR */}
           <div className="px-3 py-4 border-b border-blue-900">
             <button
-              onClick={() => navigate('/internal/petugas/profil')}
+              onClick={() => goTo('/internal/petugas/profil')}
               className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-left overflow-hidden"
             >
               <div className="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden border border-white/20">
@@ -156,21 +195,21 @@ export default function PetugasLayout({ children }) {
               icon={<LayoutDashboard size={16} />}
               label="Daftar Tugas"
               active={isDaftarTugasActive}
-              onClick={() => navigate('/internal/petugas')}
+              onClick={() => goTo('/internal/petugas')}
             />
 
             <SidebarItem
               icon={<ClipboardList size={16} />}
               label="Laporan Masuk"
               active={isLaporanActive}
-              onClick={() => navigate('/internal/petugas/laporan')}
+              onClick={() => goTo('/internal/petugas/laporan')}
             />
 
             <SidebarItem
               icon={<History size={16} />}
               label="Riwayat Penindakan"
               active={isRiwayatActive}
-              onClick={() => navigate('/internal/petugas/riwayat')}
+              onClick={() => goTo('/internal/petugas/riwayat')}
             />
 
           </div>
@@ -178,7 +217,7 @@ export default function PetugasLayout({ children }) {
           {/* LOGOUT */}
           <div className="p-4 border-t border-blue-900">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => goTo('/')}
               className="w-full flex items-center justify-center gap-2 text-blue-200 text-sm font-semibold py-2.5 rounded-xl border border-blue-800 transition-all duration-200 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
             >
               <LogOut size={16} />
@@ -189,7 +228,7 @@ export default function PetugasLayout({ children }) {
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {children}
         </main>
 

@@ -159,13 +159,22 @@ export default function TambahPetugas() {
           <span className="text-base">←</span>
           Kembali
         </button>
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 leading-tight">
-            Tambah Petugas Baru
-          </h2>
-          <p className="text-gray-500 mt-2 text-sm leading-relaxed max-w-2xl">
-            Lengkapi detail informasi untuk mendaftarkan personil operasional baru.
-          </p>
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center text-2xl">
+              👮
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Tambah Petugas Baru
+              </h2>
+
+              <p className="text-gray-500 text-sm mt-1">
+                Lengkapi informasi petugas untuk membuat akun baru.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

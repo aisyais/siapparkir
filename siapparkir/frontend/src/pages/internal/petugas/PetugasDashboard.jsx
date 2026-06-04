@@ -51,9 +51,23 @@ export default function PetugasDashboard() {
   return (
     <div className="max-w-8xl mx-auto space-y-8">
       {/* HEADER SECTION */}
-      <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Daftar Tugas Lapangan</h1>
-        <p className="text-gray-500 text-sm">Kelola dan lakukan penindakan pada pelanggaran parkir di area Anda.</p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 rounded-3xl p-8 shadow-sm mb-8">
+        <div className="absolute right-0 top-0 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl"></div>
+
+        <div className="relative">
+          <span className="text-blue-200 text-xs uppercase tracking-[0.25em] font-bold">
+            Sistem SiapParkir
+          </span>
+
+          <h1 className="text-4xl font-extrabold text-white mt-2">
+            Daftar Tugas Lapangan
+          </h1>
+
+          <p className="text-blue-100 mt-3 max-w-2xl text-sm leading-relaxed">
+            Pantau laporan yang ditugaskan kepada Anda, lakukan verifikasi di
+            lapangan, dan selesaikan proses penindakan secara cepat dan akurat.
+          </p>
+        </div>
       </div>
 
       {/* ANTRIAN LIST */}

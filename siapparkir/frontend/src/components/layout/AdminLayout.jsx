@@ -6,8 +6,9 @@ import {
   LayoutDashboard,
   ClipboardList,
   Star,
-  Users
-} from 'lucide-react'
+  Users,
+  X
+} from 'lucide-react';
 
 function SidebarItem({ icon, label, onClick, active }) {
   return (
@@ -30,14 +31,13 @@ export default function AdminLayout({ children }) {
   const location = useLocation();
   const token = useAuthStore((s) => s.token);
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [admin, setAdmin] = useState({
     nama: 'Administrator',
     foto: '/avatar-admin.jpg',
   });
 
-  // =========================
-  // FETCH PROFIL ADMIN
-  // =========================
   useEffect(() => {
     const fetchProfil = async () => {
       if (!token) return;
@@ -68,15 +68,27 @@ export default function AdminLayout({ children }) {
 
   const isActive = (path) => location.pathname === path;
 
+  const goTo = (path) => {
+    navigate(path);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
 
       {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
+
+          {/* LOGO A - KLIK UNTUK BUKA SIDEBAR DI HP */}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center md:cursor-default"
+          >
             <span className="text-white font-black text-sm">A</span>
-          </div>
+          </button>
+
           <div>
             <h1 className="font-bold text-gray-800 leading-none">
               Admin Dishub
@@ -99,79 +111,109 @@ export default function AdminLayout({ children }) {
         </button>
       </header>
 
-      <div className="flex flex-1">
+      {/* OVERLAY MOBILE */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+        />
+      )}
+
+      <div className="flex flex-1 overflow-hidden">
 
         {/* SIDEBAR */}
-        <aside className="hidden md:flex w-75 bg-blue-950 flex-col">
+        <aside
+          className={`
+            fixed md:static top-0 left-0 z-50 h-screen w-72 bg-blue-950 flex flex-col
+            transform transition-transform duration-300
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            md:translate-x-0
+          `}
+        >
+
+          {/* CLOSE BUTTON MOBILE */}
+          <div className="md:hidden flex justify-end p-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-white"
+            >
+              <X size={22} />
+            </button>
+          </div>
 
           {/* PROFILE SIDEBAR */}
-            <div className="px-3 py-4 border-b border-blue-900">
+          <div className="px-3 py-4 border-b border-blue-900">
             <button
-                onClick={() => navigate('/internal/admin/profil')}
-                className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-left overflow-hidden"
+              onClick={() => goTo('/internal/admin/profil')}
+              className="w-full flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-left overflow-hidden"
             >
-                <div className="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden border border-white/20">
+              <div className="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden border border-white/20">
                 <img
-                    src={admin.foto}
-                    alt="Admin"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
+                  src={admin.foto}
+                  alt="Admin"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
                     e.target.src = '/avatar-admin.jpg';
-                    }}
+                  }}
                 />
-                </div>
+              </div>
 
-                <div className="min-w-0">
+              <div className="min-w-0">
                 <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider">
-                    Administrator
+                  Administrator
                 </div>
 
                 <div className="text-sm font-bold text-white truncate">
-                    {admin.nama}
+                  {admin.nama}
                 </div>
-                </div>
+              </div>
             </button>
-            </div>
+          </div>
 
           {/* MENU */}
           <div className="space-y-1 flex-1 p-4">
             <SidebarItem
-                icon={<LayoutDashboard size={16} />}
-                label="Dashboard"
-                active={isActive('/internal/admin')}
-                onClick={() => navigate('/internal/admin')}
+              icon={<LayoutDashboard size={16} />}
+              label="Dashboard"
+              active={isActive('/internal/admin')}
+              onClick={() => goTo('/internal/admin')}
             />
 
             <SidebarItem
-                icon={<ClipboardList size={16} />}
-                label="Laporan Masuk"
-                active={isActive('/internal/admin/laporan')}
-                onClick={() => navigate('/internal/admin/laporan')}
+              icon={<ClipboardList size={16} />}
+              label="Laporan Masuk"
+              active={isActive('/internal/admin/laporan')}
+              onClick={() => goTo('/internal/admin/laporan')}
             />
 
             <SidebarItem
-                icon={<Star size={16} />}
-                label="Penilaian Masyarakat"
-                active={isActive('/internal/admin/penilaian')}
-                onClick={() => navigate('/internal/admin/penilaian')}
+              icon={<Star size={16} />}
+              label="Penilaian Masyarakat"
+              active={isActive('/internal/admin/penilaian')}
+              onClick={() => goTo('/internal/admin/penilaian')}
             />
 
             <SidebarItem
-                icon={<Users size={16} />}
-                label="Manajemen Petugas"
-                active={isActive('/internal/admin/petugas')}
-                onClick={() => navigate('/internal/admin/petugas')}
+              icon={<Users size={16} />}
+              label="Manajemen Petugas"
+              active={isActive('/internal/admin/petugas')}
+              onClick={() => goTo('/internal/admin/petugas')}
             />
-            </div>
+          </div>
 
           {/* LOGOUT */}
           <div className="p-4 border-t border-blue-900">
-            <button onClick={() => navigate('/')} className="w-full flex items-center justify-center gap-2 text-blue-200 text-sm font-semibold py-2.5 rounded-xl border border-blue-800 transition-all duration-200 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 active:scale-95">← Keluar</button>
+            <button
+              onClick={() => goTo('/')}
+              className="w-full flex items-center justify-center gap-2 text-blue-200 text-sm font-semibold py-2.5 rounded-xl border border-blue-800 transition-all duration-200 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
+            >
+              ← Keluar
+            </button>
           </div>
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {children}
         </main>
       </div>
