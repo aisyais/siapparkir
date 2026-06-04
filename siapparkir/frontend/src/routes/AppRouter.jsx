@@ -8,6 +8,7 @@ import DashboardPage     from '../pages/public/Dashboard'
 import LoginPage         from '../pages/internal/LoginPage'
 import AdminLayout from '../components/layout/AdminLayout';
 import PetugasLayout from '../components/layout/PetugasLayout';
+import MasyarakatLayout from '../components/layout/MasyarakatLayout';
 import AdminDashboard    from '../pages/internal/admin/AdminDashboard'
 import AdminLaporan      from '../pages/internal/admin/AdminLaporan'
 import AdminPetugas      from '../pages/internal/admin/AdminPetugas'
@@ -26,6 +27,7 @@ import SuksesPage        from '../pages/public/SuksesPage'
 import RiwayatPenindakan from '../pages/internal/petugas/RiwayatPenindakan'
 
 import DetailLaporanPage from '../pages/public/DetailLaporanPage'
+import EditPetugas from '../pages/internal/admin/EditPetugas'
 
 const AdminRouteWrapper = () => (
   <AdminLayout>
@@ -49,12 +51,14 @@ export default function AppRouter() {
         <Route path="/" element={<LandingPage />} />
         
         {/* Rute Publik Lainnya */}
-        <Route path="/dashboard"  element={<DashboardPage />} />
-        <Route path="/lapor"      element={<LaporPage />} />
-        <Route path="/cek-status" element={<CekStatusPage />} />
-        <Route path="/riwayat"    element={<RiwayatPage />} />
-        <Route path="/sukses"       element={<SuksesPage />} />
-        <Route path="/detail/:kode" element={<DetailLaporanPage />} />
+          <Route element={<MasyarakatLayout />}>
+            <Route path="/dashboard"  element={<DashboardPage />} />
+            <Route path="/lapor"      element={<LaporPage />} />
+            <Route path="/cek-status" element={<CekStatusPage />} />
+            <Route path="/riwayat"    element={<RiwayatPage />} />
+            <Route path="/detail/:kode" element={<DetailLaporanPage />} />
+          </Route>
+          <Route path="/sukses"       element={<SuksesPage />} />
 
         {/* Internal / Login Area */}
         <Route path="/internal/login" element={<LoginPage />} />
@@ -68,9 +72,10 @@ export default function AppRouter() {
             <Route path="/internal/admin/laporan_penindakan" element={<AdminLaporanPenindakan />} />
             <Route path="/internal/admin/tambah_petugas" element={<TambahPetugas />} />
             <Route path="/internal/admin/penilaian" element={<PenilaianMasyarakat />} />
-            <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
             <Route path="/internal/admin/profil" element={<ProfilAdmin />} />
+            <Route path="/internal/admin/petugas/:id/edit" element={<EditPetugas />} />
           </Route>
+          <Route path="/internal/admin/preview-laporan" element={<PreviewPDF />} />
         </Route>
 
         {/* Hak Akses: Petugas */}

@@ -10,291 +10,157 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetch = async () => {
-      const kodes = getRiwayat()
-
-      if (!kodes || !kodes.length) {
-        setLoading(false)
-        return
+    const loadRiwayat = async () => {
+      const kodes = getRiwayat();
+      
+      // Jika tidak ada data, langsung berhenti dengan rapi
+      if (!kodes?.length) {
+        setLoading(false);
+        return;
       }
 
       try {
+        setLoading(true);
+        
+        // Menggunakan Promise.all untuk mengambil semua data secara paralel
         const responses = await Promise.all(
-          kodes.map(kode => cekStatusLaporan(kode))
-        )
-
-        const dataLaporan = responses
-          .map(res => res.data?.data)
-          .filter(Boolean)
-
-        setLaporan(dataLaporan)
+          kodes.map(kode => cekStatusLaporan(kode).catch(() => null))
+        );
+        
+        // Memfilter hasil yang sukses saja dan memperbarui state
+        const dataValid = responses
+          .map(res => res?.data?.data)
+          .filter(Boolean);
+          
+        setLaporan(dataValid);
+        
       } catch (err) {
-        console.error(err)
+        console.error('Gagal memuat riwayat:', err);
+        // Anda bisa menambahkan toast error di sini jika perlu
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetch()
-  }, [])
+    loadRiwayat();
+  }, []); // Dependency array kosong tetap dipertahankan
 
-  const menunggu = laporan.filter(
-    l => l.status_laporan === 'menunggu_verifikasi'
-  ).length
-
-  const ditindak = laporan.filter(
-    l => ['dalam_penanganan', 'ditindak'].includes(l.status_laporan)
-  ).length
+  const menunggu = laporan.filter(l => l.status_laporan === 'menunggu_verifikasi').length
+  const ditindak = laporan.filter(l => ['dalam_penanganan', 'ditindak'].includes(l.status_laporan)).length
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-
-      {/* HEADER */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 shadow-sm z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-blue-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-xs">P</span>
+    <div className="w-full max-w-[1550px] mx-auto">
+      {/* BANNER & CARD */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-gradient-to-r from-blue-950 to-blue-900 rounded-2xl p-8 relative overflow-hidden text-white flex flex-col justify-between shadow-sm min-h-[220px]">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Pantau & Lapor Parkir Liar</h1>
+          <p className="text-blue-200 text-sm">Bantu wujudkan ketertiban kota. Laporkan kendaraan yang parkir sembarangan dan pantau status tindak lanjut secara real-time.</p>
+          <button 
+            onClick={() => navigate('/lapor')} 
+            className="bg-cyan-100 hover:bg-cyan-300 text-blue-950 px-5 py-2.5 rounded-xl text-sm font-bold w-fit transition shadow-sm"
+          >
+            📸 Buat Laporan Baru
+          </button>
+        </div>
+        
+        <div className="flex flex-col gap-4 justify-between">
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">Menunggu Verifikasi</p>
+              <p className="text-3xl font-bold text-gray-800">{menunggu}</p>
+            </div>
+            <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-xl">📋</div>
           </div>
-          <span className="font-bold text-gray-800">SiapParkir</span>
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">Sedang Ditindak</p>
+              <p className="text-3xl font-bold text-gray-800">{ditindak}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-xl">🛡️</div>
+          </div>
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div className="flex flex-1">
-
-        {/* SIDEBAR */}
-        <aside className="hidden md:flex w-75 bg-blue-950 flex-col py-6 px-4">
-
-          <div className="flex items-center gap-3 bg-blue-900 rounded-xl px-3 py-3 mb-6">
-            <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white">
-              👤
-            </div>
-
-            <div className="flex flex-col">
-              <span className="text-white text-xs font-bold">
-                Masyarakat
-              </span>
-            </div>
+      {/* RIWAYAT */}
+      <div className="space-y-4 mt-10"> {/* Tambahkan mt-10 di sini */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1.5 bg-blue-700 rounded-full"></div>
+            <h2 className="text-2xl font-black text-gray-800 tracking-tight">Riwayat Laporan</h2>
           </div>
+          <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+            Tampilan Terkini
+          </span>
+        </div>
 
-          <div className="space-y-1 flex-1">
+        {loading && (
+          <div className="text-center py-12 text-gray-400 text-sm">⏳ Memuat riwayat data...</div>
+        )}
 
-            <button
-              onClick={() => navigate('/lapor')}
-              className="w-full flex items-center gap-2 bg-blue-700 text-white rounded-lg px-3 py-2.5 text-sm font-medium mb-4"
-            >
-              + Laporan Baru
+        {!loading && laporan.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="text-5xl mb-3">📭</div>
+            <p className="font-semibold text-gray-600">Belum ada laporan</p>
+            <button onClick={() => navigate('/lapor')} className="mt-5 px-5 py-2.5 bg-blue-700 text-white rounded-xl text-sm font-semibold">
+              Buat Laporan Pertama
             </button>
-
-            <SidebarItem
-              icon="📊"
-              label="Dashboard"
-              onClick={() => navigate('/dashboard')}
-              active
-            />
-
-            <SidebarItem
-              icon="📋"
-              label="Laporan Masuk"
-              onClick={() => navigate('/lapor')}
-            />
-
-            <SidebarItem
-              icon="🗂️"
-              label="Riwayat Laporan"
-              onClick={() => navigate('/riwayat')}
-            />
           </div>
+        )}
 
-          <button
-            onClick={() => navigate('/')}
-            className="text-red-500 text-sm py-2 font-medium transition-all duration-300 hover:text-red-200 hover:translate-x-1 cursor-pointer"          >
-            ← Keluar
-          </button>
-        </aside>
-
-        {/* MAIN CONTENT */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto space-y-8">
-            {/* BANNER */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              <div className="lg:col-span-2 bg-gradient-to-r from-blue-950 to-blue-900 rounded-2xl p-8 relative overflow-hidden text-white flex flex-col justify-between shadow-sm min-h-[220px]">
-
-                <div className="absolute right-6 bottom-[-20px] text-[180px] font-black text-white opacity-5 select-none pointer-events-none leading-none">
-                  PARKIR
-                </div>
-
-                <div className="max-w-md space-y-2 z-10">
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    Pantau & Lapor Parkir Liar
-                  </h1>
-
-                  <p className="text-blue-200 text-sm leading-relaxed">
-                    Bantu wujudkan ketertiban kota. Laporkan kendaraan
-                    yang parkir sembarangan dan pantau status tindak lanjut
-                    secara real-time.
-                  </p>
-                </div>
-
-                <div className="pt-4 z-10">
-                  <button
-                    onClick={() => navigate('/lapor')}
-                    className="bg-cyan-100 hover:bg-cyan-200 text-blue-950 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition shadow-sm"
-                  >
-                    📸 Buat Laporan Baru
-                  </button>
-                </div>
-              </div>
-
-              {/* CARD */}
-              <div className="flex flex-col gap-4 justify-between">
-
-                <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">
-                      Menunggu Verifikasi
-                    </p>
-
-                    <p className="text-3xl font-bold text-gray-800">
-                      {menunggu}
-                    </p>
+        <div className="space-y-3">
+          {!loading && [...laporan]
+            .sort((a, b) => new Date(b.waktu_laporan) - new Date(a.waktu_laporan))
+            .slice(0, 3)
+            .map((l) => (
+              <button
+                key={l.kode_laporan}
+                onClick={() => navigate(`/detail/${l.kode_laporan}`)}
+                className="group w-full bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-all duration-300 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1"
+              >
+                <div className="flex items-center gap-4">
+                  {/* Foto dengan Rounded yang lebih lembut */}
+                  <div className="w-16 h-16 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100">
+                    {l.foto_bukti ? (
+                      <img src={`http://localhost:3000/uploads/${l.foto_bukti}`} alt="Bukti" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl opacity-50">🚗</div>
+                    )}
                   </div>
-
-                  <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-xl">
-                    📋
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">
-                      Sedang Ditindak
-                    </p>
-
-                    <p className="text-3xl font-bold text-gray-800">
-                      {ditindak}
-                    </p>
-                  </div>
-
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-xl">
-                    🛡️
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* RIWAYAT */}
-            <div className="space-y-4">
-
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Riwayat Laporan
-                </h2>
-
-                <button
-                  onClick={() => navigate('/riwayat')}
-                  className="text-sm font-semibold text-blue-700"
-                >
-                  Lihat Semua →
-                </button>
-              </div>
-
-              {loading && (
-                <div className="text-center py-12 text-gray-400 text-sm">
-                  ⏳ Memuat riwayat data...
-                </div>
-              )}
-
-              {!loading && laporan.length === 0 && (
-                <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                  <div className="text-5xl mb-3">📭</div>
-
-                  <p className="font-semibold text-gray-600">
-                    Belum ada laporan
-                  </p>
-
-                  <button
-                    onClick={() => navigate('/lapor')}
-                    className="mt-5 px-5 py-2.5 bg-blue-700 text-white rounded-xl text-sm font-semibold"
-                  >
-                    Buat Laporan Pertama
-                  </button>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {/* LOGIKA: Sortir berdasarkan waktu, lalu ambil 3 pertama */}
-                {!loading && [...laporan]
-                  .sort((a, b) => new Date(b.waktu_laporan) - new Date(a.waktu_laporan))
-                  .slice(0, 3)
-                  .map((l) => (
-                  <button
-                    key={l.kode_laporan}
-                    onClick={() => navigate(`/detail/${l.kode_laporan}`)}
-                    className="w-full bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
-                        {l.foto_bukti ? (
-                          <img
-                            src={`http://localhost:3000/uploads/${l.foto_bukti}`}
-                            alt="Bukti Laporan"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.log("GAGAL LOAD:", e.target.src)
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl">
-                            🚗
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-800">
-                          {l.kategori?.nama_kategori || 'Pelanggaran Parkir'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          📍 {l.alamat}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          📅 {formatTanggal(l.waktu_laporan)}
-                        </p>
-                      </div>
+                  
+                  <div className="space-y-0.5">
+                    {/* Judul dengan font yang lebih tegas */}
+                    <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                      {l.kategori?.nama_kategori || 'Pelanggaran Parkir'}
+                    </h3>
+                    
+                    {/* Plat Nomor sebagai detail sekunder */}
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700 font-bold tracking-wide">
+                        {l.nomor_plat}
+                      </span>
+                      <span>•</span>
+                      <span className="text-sm text-gray-500 break-words leading-snug">{l.alamat}</span>
                     </div>
-                    <span
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${
-                        STATUS_COLOR[l.status_laporan] ||
-                        'bg-gray-50 border-gray-200 text-gray-500'
-                      }`}
-                    >
-                      {STATUS_LABEL[l.status_laporan] || l.status_laporan}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
+                    
+                    {/* Tanggal dengan style yang lebih bersih */}
+                    <p className="text-sm text-gray-500 break-words leading-snug">
+                      📅 {formatTanggal(l.waktu_laporan)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Badge Status dengan style modern */}
+                <div className="flex sm:justify-end">
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+                    STATUS_COLOR[l.status_laporan] || 'bg-gray-50 border-gray-200 text-gray-500'
+                  }`}>
+                    {STATUS_LABEL[l.status_laporan] || l.status_laporan}
+                  </span>
+                </div>
+              </button>
+            ))}
+        </div>
       </div>
     </div>
-  )
-}
-
-function SidebarItem({ icon, label, onClick, active }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
-        active
-          ? 'bg-blue-800 text-white'
-          : 'text-blue-300 hover:bg-blue-900'
-      }`}
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </button>
   )
 }

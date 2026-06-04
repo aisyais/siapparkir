@@ -182,7 +182,7 @@ export default function AdminLaporanPenindakan() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
       {/* MODAL EKSPOR */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -223,13 +223,24 @@ export default function AdminLaporanPenindakan() {
 
         {/* HEADER PAGE */}
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-black text-gray-900">
-              Laporan Penindakan
-            </h1>
-            <p className="text-gray-500 mt-1 text-sm">
-              Manajemen database laporan dan aksi penegakan hukum.
-            </p>
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-2xl bg-[#001A57] flex items-center justify-center shadow-md">
+                <span className="text-white text-2xl font-bold">LP</span>
+              </div>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
+                  Monitoring Operasional
+                </div>
+                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mt-1">
+                  Laporan Penindakan
+                </h1>
+                <p className="text-gray-500 mt-2 max-w-4xl leading-relaxed">
+                  Monitoring dan pengelolaan data tindakan petugas lapangan terhadap
+                  laporan pelanggaran parkir yang telah diverifikasi dan ditindaklanjuti.
+                </p>
+              </div>
+            </div>
           </div>
 
           <button

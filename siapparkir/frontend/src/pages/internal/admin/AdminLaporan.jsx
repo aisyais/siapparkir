@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
 import { Clock, AlertTriangle, FileText, MapPin, AlignLeft, Tag } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function AdminLaporan() {
   const navigate = useNavigate();
@@ -47,11 +48,26 @@ export default function AdminLaporan() {
   }, [token, fetchData]);
 
   return (
-    <div className="max-w-[95%] mx-auto p-6 lg:p-8 space-y-8 bg-gray-50/50 min-h-screen">
+    <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Verifikasi Laporan</h2>
-          <p className="text-gray-500 mt-1">Kelola dan tindak lanjuti laporan pelanggaran parkir masyarakat.</p>
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#001A57] to-[#00308F] p-8 md:p-10 text-white shadow-lg">
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 text-[180px] font-black opacity-5 select-none">
+            REPORT
+          </div>
+          <div className="relative z-10 w-full">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 text-xs font-semibold uppercase tracking-wider">
+              Manajemen Laporan
+            </span>
+            <h2 className="mt-4 text-4xl font-extrabold tracking-tight">
+              Verifikasi Laporan
+            </h2>
+            <p className="mt-3 text-blue-100 text-sm leading-relaxed max-w-5xl">
+              Tinjau laporan yang dikirim masyarakat, lakukan validasi bukti pelanggaran,
+              tentukan prioritas penanganan, dan distribusikan tugas kepada petugas
+              lapangan secara terstruktur untuk memastikan setiap laporan diproses secara
+              cepat, tepat, dan terdokumentasi dengan baik.
+            </p>
+          </div>
         </div>
         <button
           onClick={() => navigate('/internal/admin/laporan_penindakan')}
@@ -126,11 +142,30 @@ function DetailLaporanCard({ laporan, token }) {
           { id_petugas: petugas, tindakan_direkomendasikan: 'tindak_lanjut', catatan_tugas: 'Segera tangani', batas_waktu_penanganan: new Date().toISOString() }, 
           { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.put(`http://localhost:3000/api/admin/laporan/${laporan.id_laporan}/tolak`, { alasan_penolakan: alasanTolak }, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.put(`http://localhost:3000/api/admin/laporan/${laporan.id_laporan}/tolak`, 
+          { alasan_penolakan: alasanTolak }, 
+          { headers: { Authorization: `Bearer ${token}` } });
       }
-      alert("Aksi berhasil diproses!");
+
+      // Alert Cantik Sukses
+      await Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Aksi telah diproses dengan sukses.',
+        confirmButtonColor: '#1d4ed8', // Biru Tailwind (blue-700)
+        timer: 2000
+      });
+      
       window.location.reload();
-    } catch (err) { alert("Gagal memproses aksi."); }
+    } catch (err) {
+      // Alert Cantik Error
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Gagal memproses aksi. Silakan coba lagi.',
+        confirmButtonColor: '#dc2626' // Merah Tailwind
+      });
+    }
   };
 
   return (
@@ -153,8 +188,12 @@ function DetailLaporanCard({ laporan, token }) {
            <p className="text-sm font-medium bg-gray-50 p-4 rounded-xl text-gray-700">{laporan.alamat}</p>
         </div>
         <div>
-           <h4 className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3"><Tag size={14}/> Kategori</h4>
-           <p className="text-sm font-medium bg-blue-50 p-4 rounded-xl text-blue-900">{laporan.KategoriPelanggaran?.nama_kategori || 'Kategori tidak diketahui'}</p>
+          <h4 className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            <Tag size={14}/> Kategori
+          </h4>
+          <p className="text-sm font-medium bg-blue-50 p-4 rounded-xl text-blue-900">
+            {laporan.kategori?.nama_kategori || laporan.KategoriPelanggaran?.nama_kategori || 'Kategori tidak diketahui'}
+          </p>
         </div>
       </div>
 

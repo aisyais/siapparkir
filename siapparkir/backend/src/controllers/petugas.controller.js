@@ -359,6 +359,43 @@ exports.updateStatusDiri = async (req, res) => {
 }
 
 // ============================================================
+// ADMIN - Update Status Petugas
+// ============================================================
+
+exports.updateStatusPetugas = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { status_petugas } = req.body
+
+    if (!['aktif', 'istirahat', 'off'].includes(status_petugas))
+      return fail(res, 'Status tidak valid')
+
+    const petugas = await User.findOne({
+      where: {
+        id_user: id,
+        role: 'petugas'
+      }
+    })
+
+    if (!petugas)
+      return fail(res, 'Petugas tidak ditemukan', 404)
+
+    await petugas.update({
+      status_petugas
+    })
+
+    return ok(
+      res,
+      petugas,
+      `Status berhasil diubah menjadi ${status_petugas}`
+    )
+  } catch (err) {
+    console.error(err)
+    return fail(res, 'Server error', 500)
+  }
+}
+
+// ============================================================
 // NOTIFIKASI
 // ============================================================
 

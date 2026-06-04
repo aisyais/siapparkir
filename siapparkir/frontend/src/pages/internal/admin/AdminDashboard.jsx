@@ -37,13 +37,27 @@ export default function AdminDashboard() {
   const { statistik, antrean_verifikasi } = data;
 
   return (
-    <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
+    <div className="max-w-[1600px] mx-auto p-6 lg:p-2 space-y-8">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Admin</h1>
-          <p className="text-gray-500 mt-1">Selamat datang kembali, pantau aktivitas operasional di sini.</p>
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#001A57] to-[#0037C1] rounded-3xl p-8 shadow-lg mb-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-24 translate-x-24" />
+        <div className="absolute bottom-0 right-20 w-40 h-40 bg-white/5 rounded-full translate-y-16" />
+
+        <div className="relative">
+          <span className="text-blue-200 text-xs uppercase tracking-[0.25em] font-bold">
+            Sistem SiapParkir
+          </span>
+
+          <h1 className="text-4xl font-extrabold text-white mt-2">
+            Dashboard Admin
+          </h1>
+
+          <p className="text-blue-100 mt-3 max-w-2xl text-sm leading-relaxed">
+            Kelola verifikasi laporan, monitor aktivitas petugas lapangan,
+            serta pantau statistik operasional dalam satu dashboard terintegrasi.
+          </p>
         </div>
+
       </div>
 
       {/* TOP GRID: MENGGABUNGKAN GRADIENT CARD & STATS */}
@@ -73,12 +87,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-50 flex items-center justify-between">
           <h3 className="font-bold text-gray-900 text-lg">Antrean Verifikasi</h3>
-          <button
-            onClick={() => navigate('/internal/admin/laporan')}
-            className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors"
-          >
-            Lihat Semua <ArrowRight size={16} />
-          </button>
+          
         </div>
         
         <div className="overflow-x-auto">

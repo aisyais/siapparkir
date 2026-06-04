@@ -99,7 +99,7 @@ export default function ProfilAdmin() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Account Information</h2>
           <button 

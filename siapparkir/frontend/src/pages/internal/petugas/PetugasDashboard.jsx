@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { MapPin, Map, ClipboardCheck, AlertCircle, Clock } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
+import Swal from 'sweetalert2';
 
 export default function PetugasDashboard() {
   const navigate = useNavigate();
@@ -17,12 +18,31 @@ export default function PetugasDashboard() {
   const fetchLaporan = async () => {
     try {
       setLoading(true);
+
       const res = await axios.get('http://localhost:3000/api/petugas/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLaporan(Array.isArray(res.data?.data?.tugas_aktif) ? res.data.data.tugas_aktif : []);
+
+      // Mengambil data dengan aman menggunakan optional chaining
+      const tugasAktif = res.data?.data?.tugas_aktif;
+      
+      // Validasi tipe data sebelum set ke state
+      setLaporan(Array.isArray(tugasAktif) ? tugasAktif : []);
+
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Gagal memuat dashboard:", err);
+
+      // Memberikan feedback visual yang cantik jika terjadi error
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Memuat Data',
+        text: 'Terjadi kesalahan saat mengambil data dashboard. Silakan coba muat ulang.',
+        confirmButtonColor: '#001A57',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setLoading(false);
     }

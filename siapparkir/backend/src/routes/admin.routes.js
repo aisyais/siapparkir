@@ -22,6 +22,7 @@ router.get('/laporan/:id/lewati',       admin.lewatiLaporan)
 // Petugas
 router.get('/petugas',                  admin.getPetugasList)
 router.get('/petugas/tersedia',         admin.getPetugasTersedia)
+router.get('/petugas/:id',        admin.getPetugasById)
 router.post('/petugas', upload.single('foto_profil'), admin.buatPetugas)
 router.put('/petugas/:id', upload.single('foto_profil'), admin.updatePetugas)
 router.put('/petugas/:id/status',       admin.toggleStatusPetugas)

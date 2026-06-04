@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../../../store/authStore';
+import Swal from 'sweetalert2';
 
 export default function TambahPetugas() {
   const navigate = useNavigate();
@@ -36,40 +37,75 @@ export default function TambahPetugas() {
 
   // Fetch wilayah list pada mount
   React.useEffect(() => {
+    let isMounted = true; // Mencegah update state jika komponen sudah unmount
+
     const fetchWilayah = async () => {
       try {
+        // Menampilkan loading kecil agar user tahu ada proses di latar belakang
         const response = await axios.get('http://localhost:3000/api/admin/wilayah', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setWilayahList(Array.isArray(response.data.data) ? response.data.data : []);
+
+        if (isMounted) {
+          setWilayahList(Array.isArray(response.data.data) ? response.data.data : []);
+        }
       } catch (err) {
         console.error('Gagal fetch wilayah:', err);
+        
+        // Memberikan feedback yang lebih elegan kepada admin jika gagal
+        if (isMounted) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal Memuat Wilayah',
+            text: 'Sistem tidak dapat mengambil daftar wilayah. Silakan periksa koneksi Anda.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        }
       }
     };
-    fetchWilayah();
+
+    if (token) {
+      fetchWilayah();
+    }
+
+    return () => { isMounted = false; }; // Cleanup agar tidak ada memory leak
   }, [token]);
 
   const handleSubmit = async () => {
-    // Validasi input
-    if (!formData.nama.trim()) {
-      alert('Nama harus diisi');
-      return;
-    }
-    if (!formData.email.trim()) {
-      alert('Email harus diisi');
-      return;
-    }
-    if (!formData.id_wilayah) {
-      alert('Wilayah harus dipilih');
-      return;
-    }
-    if (!selectedFile) {
-      alert('Foto profil harus diunggah');
-      return;
-    }
+    // 1. Validasi Input (Tetap menjaga semua logika validasi Anda)
+    if (!formData.nama.trim()) return Swal.fire({ icon: 'warning', title: 'Data Kurang', text: 'Nama harus diisi' });
+    if (!formData.email.trim()) return Swal.fire({ icon: 'warning', title: 'Data Kurang', text: 'Email harus diisi' });
+    if (!formData.id_wilayah) return Swal.fire({ icon: 'warning', title: 'Data Kurang', text: 'Wilayah harus dipilih' });
+    if (!selectedFile) return Swal.fire({ icon: 'warning', title: 'Data Kurang', text: 'Foto profil harus diunggah' });
+
+    // 2. Konfirmasi sebelum kirim
+    const result = await Swal.fire({
+      title: 'Konfirmasi Simpan',
+      text: "Apakah Anda yakin ingin menambahkan petugas ini?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#001A57',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Simpan!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setLoading(true);
+
+      // 3. Indikator Loading yang cantik
+      Swal.fire({
+        title: 'Memproses...',
+        text: 'Sedang menyimpan data petugas.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
       const data = new FormData();
       data.append('nama', formData.nama);
       data.append('email', formData.email);
@@ -79,26 +115,42 @@ export default function TambahPetugas() {
       data.append('status_petugas', formData.status_petugas);
       data.append('foto_profil', selectedFile);
 
-       await axios.post('http://localhost:3000/api/admin/petugas', data, {
+      await axios.post('http://localhost:3000/api/admin/petugas', data, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data' 
         },
       });
-      
-      alert('Petugas berhasil ditambahkan!');
+
+      // 4. Pesan Berhasil
+      await Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Petugas berhasil ditambahkan.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
       navigate('/internal/admin/petugas');
+      
     } catch (err) {
       const message = err.response?.data?.message || err.message;
       console.error('Gagal menyimpan:', err.response || err);
-      alert('Gagal menyimpan data: ' + message); 
+      
+      // 5. Pesan Error
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menyimpan',
+        text: 'Terjadi kesalahan: ' + message,
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
+    <div className="max-w-[1600px] mx-auto p-6 lg:p-8 space-y-8">
       <div className="mb-8 space-y-2">
         <button
           onClick={() => navigate('/internal/admin/petugas')}
@@ -196,6 +248,6 @@ export default function TambahPetugas() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

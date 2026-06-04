@@ -36,6 +36,8 @@ export default function RiwayatPenindakan() {
   const [stats, setStats] = useState({ total: 0, teguran: 0, gembok: 0, derek: 0 });
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchRiwayat = async () => {
       try {
         setLoading(true);
@@ -44,26 +46,32 @@ export default function RiwayatPenindakan() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const payload = res.data?.data || {};
-        const data = Array.isArray(payload.data) ? payload.data : [];
+        if (!isMounted) return;
 
+        const data = Array.isArray(res.data?.data?.data) ? res.data.data.data : [];
         setRiwayat(data);
 
-        const allTindakan = data.map((item) => item.Laporan?.tindakan?.[0]?.jenis_tindakan || '');
-        setStats({
-          total: data.length,
-          teguran: allTindakan.filter((t) => t === 'teguran').length,
-          gembok: allTindakan.filter((t) => t === 'gembok').length,
-          derek: allTindakan.filter((t) => t === 'derek').length,
-        });
+        // Menggunakan reduce agar lebih efisien (hanya 1x iterasi data)
+        const stats = data.reduce((acc, item) => {
+          const tindakan = item.Laporan?.tindakan?.[0]?.jenis_tindakan;
+          if (tindakan === 'teguran') acc.teguran++;
+          else if (tindakan === 'gembok') acc.gembok++;
+          else if (tindakan === 'derek') acc.derek++;
+          return acc;
+        }, { total: data.length, teguran: 0, gembok: 0, derek: 0 });
+
+        setStats(stats);
+        
       } catch (err) {
         console.error('Gagal memuat riwayat:', err);
+        // Optional: tambahkan Swal.fire untuk feedback ke user
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     if (token) fetchRiwayat();
+    return () => { isMounted = false; };
   }, [token]);
 
   return (

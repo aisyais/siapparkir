@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth.api';
 import useAuthStore from '../../store/authStore';
-import { Shield } from 'lucide-react'; // Pastikan sudah install lucide-react
+import { Shield } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,15 +15,57 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    
+    // 1. Validasi Input (Opsional tapi disarankan)
+    if (!form.email || !form.password) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Data Kurang',
+        text: 'Email dan password harus diisi!',
+        confirmButtonColor: '#001A57'
+      });
+    }
+
     setLoading(true);
+    setError('');
+
+    // 2. Loading State yang Modern
+    Swal.fire({
+      title: 'Sedang Memverifikasi...',
+      text: 'Mohon tunggu, kami sedang memeriksa kredensial Anda.',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     try {
       const res = await login(form.email, form.password);
       const { token, user } = res.data.data;
+      
       setAuth(user, token);
-      navigate(user.role === 'admin' ? '/internal/admin' : '/internal/petugas');
+
+      // 3. Sukses dengan animasi yang halus
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Berhasil!',
+        text: `Selamat datang, ${user.nama || 'Pengguna'}`,
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        navigate(user.role === 'admin' ? '/internal/admin' : '/internal/petugas');
+      });
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Login gagal. Periksa email dan password.');
+      const errorMessage = err.response?.data?.message || 'Email atau password salah.';
+      
+      // 4. Error handling yang lebih komunikatif
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Gagal',
+        text: errorMessage,
+        confirmButtonColor: '#d33'
+      });
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
