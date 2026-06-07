@@ -126,18 +126,29 @@ export default function EditPetugas() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/internal/admin/petugas')}
-          className="flex items-center text-gray-500 hover:text-gray-800 text-sm mb-3 transition"
-        >
-          ← Kembali ke Manajemen Petugas
-        </button>
-        <h2 className="text-2xl font-bold text-gray-900">Edit Data Petugas</h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Perbarui informasi dan status petugas lapangan.
+      <div className="mb-8">
+  <button
+    onClick={() => navigate('/internal/admin/petugas')}
+    className="flex items-center gap-2 mb-6 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-[#001A57] font-semibold transition-all duration-200 hover:bg-[#001A57] hover:text-white hover:border-[#001A57] hover:shadow-lg"
+  >
+    ← Kembali
+  </button>
+
+  <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+    <div className="flex items-center gap-4">
+
+      <div>
+        <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+          Edit Data Petugas
+        </h2>
+
+        <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+          Perbarui informasi akun dan data petugas yang sudah terdaftar.
         </p>
       </div>
+    </div>
+  </div>
+</div>
 
       {/* Alert */}
       {error && (

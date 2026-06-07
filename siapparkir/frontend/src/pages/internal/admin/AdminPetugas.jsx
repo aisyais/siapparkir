@@ -36,6 +36,9 @@ export default function ManajemenPetugas() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: {
+            limit: 9999,
+          },
         }
       );
 

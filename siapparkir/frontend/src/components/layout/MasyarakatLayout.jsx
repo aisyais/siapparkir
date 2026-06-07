@@ -24,9 +24,9 @@ export default function MasyarakatLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
+      <header className="h-[73px] flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -59,7 +59,7 @@ export default function MasyarakatLayout() {
         {/* SIDEBAR */}
         <aside
           className={`
-            fixed md:static top-0 left-0 z-50 h-screen w-72 bg-blue-950 flex flex-col
+            fixed md:sticky md:top-0 top-0 left-0 z-50 h-screen md:h-full w-72 bg-blue-950 flex flex-col
             transform transition-transform duration-300
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             md:translate-x-0
@@ -138,7 +138,7 @@ export default function MasyarakatLayout() {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main className="flex-1 h-full p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>
