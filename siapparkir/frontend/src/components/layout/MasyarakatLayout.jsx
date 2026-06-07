@@ -6,7 +6,8 @@ import {
   History,
   PlusCircle,
   LogOut,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 
 export default function MasyarakatLayout() {
@@ -31,10 +32,14 @@ export default function MasyarakatLayout() {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center md:cursor-default"
+            className="md:hidden w-9 h-9 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-[#001A57] shadow-sm hover:bg-gray-50 active:scale-95 transition"
           >
-            <span className="text-white font-black text-sm">P</span>
+            <Menu size={20} />
           </button>
+
+          <div className="w-8 h-8 bg-[#001A57] rounded-xl flex items-center justify-center">
+            <span className="text-white font-black text-sm">P</span>
+          </div>
 
           <div>
             <h1 className="font-bold text-gray-800 leading-none">
